@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحميل Trading Bot Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+        }
+        h1 { margin-bottom: 20px; font-size: 2rem; }
+        p { margin-bottom: 30px; opacity: 0.8; }
+        .download-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,206,201,0.4);
+        }
+        .info {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        .info h3 { margin-bottom: 10px; color: #00cec9; }
+        .info code {
+            display: block;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            direction: ltr;
+            text-align: left;
+        }
+        .size { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Trading Bot Pro</h1>
+        <p>بوت التداول الاحترافي لـ Interactive Brokers</p>
+        
+        <a href="/trading-bot-pro-local.zip" download class="download-btn">
+            ⬇️ تحميل المشروع (ZIP)
+        </a>
+        
+        <p class="size">حجم الملف: 28 MB</p>
+        
+        <div class="info">
+            <h3>📋 خطوات التشغيل:</h3>
+            <code>1. فك ضغط الملف</code>
+            <code>2. bun install</code>
+            <code>3. bunx prisma generate</code>
+            <code>4. bun run db:push</code>
+            <code>5. bun run dev</code>
+            <code>6. افتح localhost:3000</code>
+        </div>
+    </div>
+</body>
+</html>
