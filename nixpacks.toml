@@ -7,4 +7,4 @@ cmd = "bun install"
 cmd = "bunx prisma generate && bun run build"
 
 [start]
-cmd = "HOSTNAME=0.0.0.0 bunx prisma db push --skip-generate; HOSTNAME=0.0.0.0 bun run start"
+cmd = "bun run start"
