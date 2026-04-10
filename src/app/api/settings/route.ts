@@ -5,62 +5,56 @@ import { db } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'demo';
+    let userId = searchParams.get('userId');
 
-    // Try to get user-specific settings
+    // If no userId or demo, find admin
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
+      });
+      if (admin) userId = admin.id;
+    }
+
     let settings = await db.botSettings.findUnique({
       where: { userId },
     });
 
     if (!settings) {
-      // Create user if not exists
-      try {
-        await db.user.upsert({
-          where: { id: userId },
-          create: {
-            id: userId,
-            email: `${userId}@demo.local`,
-            name: userId,
-          },
-          update: {},
-        });
-
+      // Create default settings
+      if (userId) {
         settings = await db.botSettings.create({
-          data: { userId },
-        });
-      } catch (createError) {
-        console.error('Error creating settings:', createError);
-        // Return default settings even if DB fails
-        return NextResponse.json({
-          settings: getDefaultSettings(),
+          data: { userId, accountType: 'PAPER' },
         });
       }
     }
 
-    // Return all settings
     return NextResponse.json({
+      success: true,
       settings: {
-        isRunning: settings.isRunning,
-        ibHost: settings.ibHost || '127.0.0.1',
-        ibPort: settings.ibPort || 7497,
-        ibClientId: settings.ibClientId || 1,
-        strikeSelectionMode: settings.strikeSelectionMode || 'OFFSET',
-        contractPriceMin: settings.contractPriceMin || 300,
-        contractPriceMax: settings.contractPriceMax || 400,
-        spxStrikeOffset: settings.spxStrikeOffset || 5,
-        spxDeltaTarget: settings.spxDeltaTarget || 0.3,
-        telegramEnabled: settings.telegramEnabled || false,
-        telegramBotToken: settings.telegramBotToken || '',
-        telegramChatId: settings.telegramChatId || '',
-        maxRiskPerTrade: settings.maxRiskPerTrade || 500,
-        maxOpenPositions: settings.maxOpenPositions || 3,
-        maxDailyLoss: settings.maxDailyLoss || 1000,
+        isRunning: settings?.isRunning || false,
+        accountType: settings?.accountType || 'PAPER',
+        ibHost: settings?.ibHost || '127.0.0.1',
+        ibPort: settings?.ibPort || 7497,
+        ibClientId: settings?.ibClientId || 1,
+        ibConnected: settings?.ibConnected || false,
+        strikeSelectionMode: settings?.strikeSelectionMode || 'OFFSET',
+        contractPriceMin: settings?.contractPriceMin || 300,
+        contractPriceMax: settings?.contractPriceMax || 400,
+        spxStrikeOffset: settings?.spxStrikeOffset || 5,
+        spxDeltaTarget: settings?.spxDeltaTarget || 0.3,
+        telegramEnabled: settings?.telegramEnabled || false,
+        telegramBotToken: settings?.telegramBotToken || '',
+        telegramChatId: settings?.telegramChatId || '',
+        maxRiskPerTrade: settings?.maxRiskPerTrade || 500,
+        maxOpenPositions: settings?.maxOpenPositions || 3,
+        maxDailyLoss: settings?.maxDailyLoss || 1000,
+        defaultQuantity: settings?.defaultQuantity || 1,
       }
     });
   } catch (error) {
     console.error('Error fetching settings:', error);
-    // Return default settings on error
     return NextResponse.json({
+      success: true,
       settings: getDefaultSettings(),
     });
   }
@@ -70,38 +64,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, ...settingsData } = body;
-    const uid = userId || 'demo';
+    let { userId, ...settingsData } = body;
 
-    console.log('Saving settings for user:', uid, 'data:', settingsData);
-
-    // Ensure user exists
-    try {
-      await db.user.upsert({
-        where: { id: uid },
-        create: {
-          id: uid,
-          email: `${uid}@demo.local`,
-          name: uid,
-        },
-        update: {},
+    // If no userId or demo, find admin
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
       });
-    } catch (userError) {
-      console.log('User upsert failed, continuing...', userError);
+      if (admin) userId = admin.id;
     }
 
-    // Check if settings exist
+    console.log('Saving settings for user:', userId);
+
     let settings = await db.botSettings.findUnique({
-      where: { userId: uid },
+      where: { userId },
     });
 
     if (!settings) {
       settings = await db.botSettings.create({
-        data: { userId: uid, ...settingsData },
+        data: { userId, ...settingsData },
       });
     } else {
       settings = await db.botSettings.update({
-        where: { userId: uid },
+        where: { userId },
         data: settingsData,
       });
     }
@@ -110,16 +95,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      message: 'تم حفظ الإعدادات بنجاح',
       settings: {
         isRunning: settings.isRunning,
+        accountType: settings.accountType,
         ibHost: settings.ibHost,
         ibPort: settings.ibPort,
-        ibClientId: settings.ibClientId,
-        strikeSelectionMode: settings.strikeSelectionMode,
-        contractPriceMin: settings.contractPriceMin,
-        contractPriceMax: settings.contractPriceMax,
-        spxStrikeOffset: settings.spxStrikeOffset,
-        spxDeltaTarget: settings.spxDeltaTarget,
         telegramEnabled: settings.telegramEnabled,
         telegramBotToken: settings.telegramBotToken || '',
         telegramChatId: settings.telegramChatId || '',
@@ -138,6 +119,7 @@ export async function POST(request: NextRequest) {
 function getDefaultSettings() {
   return {
     isRunning: false,
+    accountType: 'PAPER',
     ibHost: '127.0.0.1',
     ibPort: 7497,
     ibClientId: 1,
@@ -152,5 +134,6 @@ function getDefaultSettings() {
     maxRiskPerTrade: 500,
     maxOpenPositions: 3,
     maxDailyLoss: 1000,
+    defaultQuantity: 1,
   };
 }

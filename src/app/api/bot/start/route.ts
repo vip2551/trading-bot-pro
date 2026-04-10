@@ -5,24 +5,21 @@ import { db } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const userId = body.userId || 'demo';
+    let userId = body.userId;
+
+    // If no userId, find admin user
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
+      });
+      if (admin) {
+        userId = admin.id;
+      } else {
+        userId = 'demo';
+      }
+    }
 
     console.log('Starting bot for user:', userId);
-
-    // Ensure user exists
-    try {
-      await db.user.upsert({
-        where: { id: userId },
-        create: {
-          id: userId,
-          email: `${userId}@demo.local`,
-          name: userId,
-        },
-        update: {},
-      });
-    } catch (userError) {
-      console.log('User upsert failed, continuing...', userError);
-    }
 
     // Get or create settings
     let settings = await db.botSettings.findUnique({
@@ -30,8 +27,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!settings) {
+      // Create settings for the user
       settings = await db.botSettings.create({
-        data: { userId, isRunning: true },
+        data: { 
+          userId, 
+          isRunning: true,
+          accountType: 'PAPER'
+        },
       });
     } else {
       settings = await db.botSettings.update({
@@ -40,61 +42,25 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get open trades for recovery info
+    // Get open trades
     let openTrades: any[] = [];
-    let pendingTrades: any[] = [];
-    
     try {
       openTrades = await db.trade.findMany({
         where: { userId, status: 'OPEN' },
       });
-
-      pendingTrades = await db.trade.findMany({
-        where: {
-          userId,
-          status: 'PENDING',
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 60 * 1000),
-          },
-        },
-      });
-    } catch (tradeError) {
-      console.log('Could not fetch trades:', tradeError);
-    }
-
-    // Recovery summary
-    const recoveryInfo = {
-      openTrades: openTrades.length,
-      pendingTrades: pendingTrades.length,
-    };
-
-    // Try to start IB service (optional)
-    let ibStatus = { connected: false, message: 'IB service not configured' };
-    try {
-      const ibRes = await fetch('http://localhost:3003/bot/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-        signal: AbortSignal.timeout(3000),
-      });
-      
-      if (ibRes.ok) {
-        ibStatus = await ibRes.json();
-        
-        await db.botSettings.update({
-          where: { id: settings.id },
-          data: { ibConnected: ibStatus.connected },
-        }).catch(() => {});
-      }
-    } catch {
-      console.log('IB service not available (this is OK for paper trading)');
+    } catch (e) {
+      console.log('Could not fetch trades');
     }
 
     return NextResponse.json({ 
       success: true, 
-      settings,
-      recovery: recoveryInfo,
-      ibStatus,
+      isRunning: true,
+      settings: {
+        isRunning: true,
+        accountType: settings.accountType,
+        ibConnected: settings.ibConnected || false
+      },
+      openTrades: openTrades.length,
       message: openTrades.length > 0 
         ? `Bot started. Found ${openTrades.length} open trades.` 
         : 'Bot started successfully',

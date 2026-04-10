@@ -2,48 +2,56 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getTestMessage, type Language } from '@/lib/telegram-templates';
 
-// Helper function to ensure user exists
-async function ensureUserExists(userId: string) {
-  let user = await db.user.findUnique({ where: { id: userId } });
-  if (!user) {
-    user = await db.user.create({
-      data: {
-        id: userId,
-        email: `${userId}@demo.local`,
-        name: userId,
-      },
-    });
-  }
-  return user;
-}
-
 // GET - Fetch notification settings
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    let userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    // If no userId or demo, find admin
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
+      });
+      if (admin) userId = admin.id;
     }
-
-    // Ensure user exists first
-    await ensureUserExists(userId);
 
     let settings = await db.notificationSettings.findUnique({
       where: { userId },
     });
 
-    if (!settings) {
+    if (!settings && userId) {
       settings = await db.notificationSettings.create({
         data: { userId },
       });
     }
 
-    return NextResponse.json({ settings });
+    return NextResponse.json({ 
+      success: true,
+      settings: settings || {
+        telegramEnabled: false,
+        telegramBotToken: '',
+        telegramChatId: '',
+        discordEnabled: false,
+        discordWebhookUrl: '',
+        emailEnabled: false,
+        notificationLanguage: 'ar'
+      }
+    });
   } catch (error) {
     console.error('Error fetching notification settings:', error);
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    return NextResponse.json({ 
+      success: true,
+      settings: {
+        telegramEnabled: false,
+        telegramBotToken: '',
+        telegramChatId: '',
+        discordEnabled: false,
+        discordWebhookUrl: '',
+        emailEnabled: false,
+        notificationLanguage: 'ar'
+      }
+    });
   }
 }
 
@@ -51,14 +59,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, ...settingsData } = body;
+    let { userId, ...settingsData } = body;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    // If no userId or demo, find admin
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
+      });
+      if (admin) userId = admin.id;
     }
 
-    // Ensure user exists first
-    await ensureUserExists(userId);
+    console.log('Saving notification settings for user:', userId);
 
     const settings = await db.notificationSettings.upsert({
       where: { userId },
@@ -66,20 +77,33 @@ export async function POST(request: NextRequest) {
       create: { userId, ...settingsData },
     });
 
-    return NextResponse.json({ success: true, settings });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'تم حفظ الإعدادات بنجاح',
+      settings 
+    });
   } catch (error) {
     console.error('Error updating notification settings:', error);
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Failed to update settings',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
 // PATCH - Test notification
 export async function PATCH(request: NextRequest) {
   try {
-    const { userId, type } = await request.json();
+    const body = await request.json();
+    let { userId, type } = body;
 
-    if (!userId || !type) {
-      return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+    // If no userId or demo, find admin
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
+      });
+      if (admin) userId = admin.id;
     }
 
     const settings = await db.notificationSettings.findUnique({
@@ -87,10 +111,13 @@ export async function PATCH(request: NextRequest) {
     });
 
     if (!settings) {
-      return NextResponse.json({ error: 'Settings not found' }, { status: 404 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Settings not found. Please save settings first.' 
+      }, { status: 404 });
     }
 
-    const lang: Language = (settings.notificationLanguage as Language) || 'en';
+    const lang: Language = (settings.notificationLanguage as Language) || 'ar';
     const testMessage = getTestMessage(lang);
     let success = false;
 
@@ -118,11 +145,13 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({
       success,
-      message: success ? 'Test sent!' : 'Failed to send',
-      lang
+      message: success ? 'تم إرسال رسالة الاختبار!' : 'فشل إرسال الرسالة',
     });
   } catch (error) {
     console.error('Error sending test notification:', error);
-    return NextResponse.json({ error: 'Failed to send test' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Failed to send test' 
+    }, { status: 500 });
   }
 }

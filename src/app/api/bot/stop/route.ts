@@ -5,54 +5,32 @@ import { db } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const userId = body.userId || 'demo';
+    let userId = body.userId;
+
+    // If no userId or demo, find admin
+    if (!userId || userId === 'demo') {
+      const admin = await db.user.findFirst({
+        where: { isAdmin: true }
+      });
+      if (admin) userId = admin.id;
+    }
 
     console.log('Stopping bot for user:', userId);
 
-    // Get settings
     let settings = await db.botSettings.findUnique({
       where: { userId },
     });
 
-    if (!settings) {
-      // Create settings if not exist
-      try {
-        await db.user.upsert({
-          where: { id: userId },
-          create: { id: userId, email: `${userId}@demo.local`, name: userId },
-          update: {},
-        });
-        settings = await db.botSettings.create({
-          data: { userId, isRunning: false },
-        });
-      } catch {
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Bot stopped (no settings found)',
-        });
-      }
-    } else {
-      settings = await db.botSettings.update({
+    if (settings) {
+      await db.botSettings.update({
         where: { id: settings.id },
         data: { isRunning: false, ibConnected: false },
       });
     }
 
-    // Try to stop IB service
-    try {
-      await fetch('http://localhost:3003/bot/stop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-        signal: AbortSignal.timeout(3000),
-      }).catch(() => {});
-    } catch {
-      console.log('IB service not available');
-    }
-
     return NextResponse.json({ 
       success: true, 
-      settings,
+      isRunning: false,
       message: 'Bot stopped successfully',
     });
   } catch (error) {
