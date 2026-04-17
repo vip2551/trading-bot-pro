@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحميل بوت التداول</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+        h1 {
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px 50px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
+        }
+        .file-info {
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .file-info p {
+            color: #374151;
+            margin: 5px 0;
+        }
+        .size {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .instructions {
+            text-align: right;
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .instructions h3 {
+            color: #059669;
+            margin-bottom: 15px;
+        }
+        .instructions ol {
+            color: #374151;
+            line-height: 1.8;
+        }
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        .copy-btn:hover {
+            background: #2563eb;
+        }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 بوت التداول برو</h1>
+        <p class="subtitle">Trading Bot Pro - الإصدار الأخير</p>
+
+        <div class="file-info">
+            <p>📦 اسم الملف: <code>trading-bot-railway-v3.tar.gz</code></p>
+            <p>📊 الحجم: <span class="size">~376 KB</span></p>
+            <p>📅 آخر تحديث: <span id="date"></span></p>
+        </div>
+
+        <a href="/trading-bot-railway-v3.tar.gz" download class="download-btn">
+            ⬇️ تحميل الآن
+        </a>
+
+        <div class="instructions">
+            <h3>📋 خطوات النشر على Railway:</h3>
+            <ol>
+                <li>حمّل الملف بالضغط على زر "تحميل الآن"</li>
+                <li>فك الضغط على جهازك:
+                    <br><code>tar -xzf trading-bot-railway-v3.tar.gz</code>
+                    <button class="copy-btn" onclick="copyCode('tar -xzf trading-bot-railway-v3.tar.gz')">نسخ</button>
+                </li>
+                <li>ارفع إلى GitHub:
+                    <br><code>git init && git add . && git commit -m "Bot"</code>
+                    <button class="copy-btn" onclick="copyCode('git init && git add . && git commit -m \"Bot\"')">نسخ</button>
+                </li>
+                <li>انشر على Railway من GitHub</li>
+            </ol>
+        </div>
+
+        <div class="instructions" style="background: #fef3c7; border-color: #f59e0b; margin-top: 15px;">
+            <h3 style="color: #d97706;">⚡ للتجربة السريعة:</h3>
+            <p style="color: #374151;">افتح البوت على Railway واختر <strong>"وضع تجريبي"</strong> من تبويب الاتصال</p>
+            <p style="color: #374151; margin-top: 10px;">الوضع التجريبي يعمل بدون الحاجة لـ Interactive Brokers!</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('date').textContent = new Date().toLocaleDateString('ar-SA');
+
+        function copyCode(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('تم النسخ!');
+            });
+        }
+    </script>
+</body>
+</html>
