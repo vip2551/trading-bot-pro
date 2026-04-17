@@ -1,0 +1,13 @@
+[phases.setup]
+
+[phases.install]
+cmd = "bun install --frozen-lockfile"
+
+[phases.build]
+cmd = "bunx prisma generate && bun run build"
+
+[phases.migrate]
+cmd = "bunx prisma db push --accept-data-loss || true"
+
+[start]
+cmd = "bash start-railway.sh"
