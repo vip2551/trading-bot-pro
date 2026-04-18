@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // Subscription Plans (Dynamic - Admin can modify)
@@ -261,8 +261,8 @@ model NotificationSettings {
 // Bot Settings
 model BotSettings {
   id                  String   @id @default(cuid())
-  userId              String   @unique
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String?  @unique
+  user                User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   isRunning           Boolean  @default(false)
   
