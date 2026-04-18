@@ -2953,81 +2953,6 @@ export default function Dashboard() {
 
           {/* Connection */}
           <TabsContent value="connection" className="space-y-6">
-            {/* Mode Selection Card */}
-            <Card className="border-2 border-primary/20">
-              <CardHeader className="bg-primary/5">
-                <CardTitle className="flex items-center gap-2">
-                  {ibStatus?.connected ? <Wifi className="h-5 w-5 text-green-500" /> : <WifiOff className="h-5 w-5 text-red-500" />}
-                  {lang === "ar" ? "وضع التشغيل" : "Operation Mode"}
-                </CardTitle>
-                <CardDescription>
-                  {lang === "ar" ? "اختر كيف تريد أن يعمل البوت" : "Choose how the bot should operate"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Simulation Mode */}
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${ibStatus?.accountType === 'simulation' || !ibStatus?.accountType ? 'border-green-500 bg-green-500/10' : 'border-gray-200 hover:border-gray-300'}`}
-                    onClick={() => saveSettings({ accountType: 'simulation' })}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <TestTube className="h-5 w-5 text-green-500" />
-                      <span className="font-bold">{lang === "ar" ? "تجريبي" : "Simulation"}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {lang === "ar" ? "يعمل بدون IB - للتجربة والاختبار" : "Works without IB - for testing"}
-                    </p>
-                  </div>
-
-                  {/* Paper Trading */}
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${ibStatus?.accountType === 'paper' ? 'border-blue-500 bg-blue-500/10' : 'border-gray-200 hover:border-gray-300'}`}
-                    onClick={() => saveSettings({ accountType: 'paper' })}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className="h-5 w-5 text-blue-500" />
-                      <span className="font-bold">{lang === "ar" ? "Paper Trading" : "Paper Trading"}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {lang === "ar" ? "حساب تجريبي في IB (المنفذ 7497)" : "IB demo account (port 7497)"}
-                    </p>
-                  </div>
-
-                  {/* Live Trading */}
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${ibStatus?.accountType === 'live' ? 'border-red-500 bg-red-500/10' : 'border-gray-200 hover:border-gray-300'}`}
-                    onClick={() => saveSettings({ accountType: 'live' })}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="h-5 w-5 text-red-500" />
-                      <span className="font-bold">{lang === "ar" ? "حقيقي" : "Live"}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {lang === "ar" ? "تداول حقيقي (المنفذ 7496)" : "Real trading (port 7496)"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div className={`flex items-center gap-4 p-4 rounded-lg ${ibStatus?.connected ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                  <div className={`h-4 w-4 rounded-full ${ibStatus?.connected ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
-                  <div>
-                    <p className="font-medium">
-                      {ibStatus?.connected
-                        ? (lang === "ar" ? "✅ متصل" : "✅ Connected")
-                        : (lang === "ar" ? "❌ غير متصل" : "❌ Not Connected")}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {ibStatus?.isSimulation
-                        ? (lang === "ar" ? "وضع التجربة - لا يحتاج IB" : "Simulation mode - no IB needed")
-                        : ibStatus?.message || (lang === "ar" ? "شغّل IB TWS أو Gateway" : "Start IB TWS or Gateway")}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* IB Settings Card */}
             <Card>
               <CardHeader>
@@ -3133,11 +3058,12 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-2 gap-3 mt-4">
+                {/* Quick Actions - 3 Connection Modes */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                  {/* Simulation Mode */}
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex flex-col items-center gap-2"
+                    className={`h-auto py-4 flex flex-col items-center gap-2 ${settings?.accountType === 'simulation' ? 'border-green-500 bg-green-500/10' : ''}`}
                     onClick={async () => {
                       setSaving(true);
                       try {
@@ -3154,27 +3080,26 @@ export default function Dashboard() {
                         setSaving(false);
                       }
                     }}
+                    disabled={saving}
                   >
                     <TestTube className="h-6 w-6 text-green-500" />
                     <span className="font-bold">{lang === "ar" ? "وضع تجريبي" : "Simulation Mode"}</span>
                     <span className="text-xs text-muted-foreground">{lang === "ar" ? "بدون IB - للتجربة" : "No IB needed - For testing"}</span>
                   </Button>
 
+                  {/* Paper Trading */}
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex flex-col items-center gap-2"
+                    className={`h-auto py-4 flex flex-col items-center gap-2 ${settings?.accountType === 'paper' ? 'border-blue-500 bg-blue-500/10' : ''}`}
                     onClick={async () => {
                       setSaving(true);
                       try {
-                        await fetch("/api/ib", {
+                        await fetch("/api/settings", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            action: "connect",
-                            userId: "demo",
-                            accountType: "paper"
-                          })
+                          body: JSON.stringify({ userId: "demo", accountType: "paper" })
                         });
+                        setIbPort("7497");
                         toast.success(lang === "ar" ? "تم التبديل إلى Paper Trading" : "Switched to Paper Trading");
                         fetchData();
                       } catch (e) {
@@ -3183,11 +3108,57 @@ export default function Dashboard() {
                         setSaving(false);
                       }
                     }}
+                    disabled={saving}
                   >
                     <Shield className="h-6 w-6 text-blue-500" />
                     <span className="font-bold">{lang === "ar" ? "Paper Trading" : "Paper Trading"}</span>
-                    <span className="text-xs text-muted-foreground">{lang === "ar" ? "حساب تجريبي IB" : "IB Demo Account"}</span>
+                    <span className="text-xs text-muted-foreground">{lang === "ar" ? "حساب تجريبي IB (7497)" : "IB Demo Account (7497)"}</span>
                   </Button>
+
+                  {/* Live Trading */}
+                  <Button
+                    variant="outline"
+                    className={`h-auto py-4 flex flex-col items-center gap-2 ${settings?.accountType === 'live' ? 'border-red-500 bg-red-500/10' : ''}`}
+                    onClick={async () => {
+                      setSaving(true);
+                      try {
+                        await fetch("/api/settings", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ userId: "demo", accountType: "live" })
+                        });
+                        setIbPort("7496");
+                        toast.success(lang === "ar" ? "تم التبديل إلى التداول الحقيقي" : "Switched to Live Trading");
+                        fetchData();
+                      } catch (e) {
+                        toast.error(lang === "ar" ? "فشل" : "Failed");
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    disabled={saving}
+                  >
+                    <TrendingUp className="h-6 w-6 text-red-500" />
+                    <span className="font-bold">{lang === "ar" ? "اتصال حقيقي" : "Live Trading"}</span>
+                    <span className="text-xs text-muted-foreground">{lang === "ar" ? "تداول حقيقي (7496)" : "Real Trading (7496)"}</span>
+                  </Button>
+                </div>
+
+                {/* Connection Status */}
+                <div className={`flex items-center gap-4 p-4 rounded-lg ${ibStatus?.connected ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                  <div className={`h-4 w-4 rounded-full ${ibStatus?.connected ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+                  <div>
+                    <p className="font-medium">
+                      {ibStatus?.connected
+                        ? (lang === "ar" ? "✅ متصل" : "✅ Connected")
+                        : (lang === "ar" ? "❌ غير متصل" : "❌ Not Connected")}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {ibStatus?.isSimulation
+                        ? (lang === "ar" ? "وضع التجربة - لا يحتاج IB" : "Simulation mode - no IB needed")
+                        : ibStatus?.message || (lang === "ar" ? "شغّل IB TWS أو Gateway" : "Start IB TWS or Gateway")}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
