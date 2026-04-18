@@ -1,38 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { ibService } from '@/lib/ib-service';
 
-// POST - Disconnect from Interactive Brokers
+// POST - Disconnect from IB
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    let userId = body.userId;
+    const body = await request.json();
+    const { userId } = body;
 
-    // If no userId or demo, find admin
-    if (!userId || userId === 'demo') {
-      const admin = await db.user.findFirst({
-        where: { isAdmin: true }
-      });
-      if (admin) userId = admin.id;
-    }
+    console.log('[IB Disconnect] Disconnecting...');
 
-    // Update settings
-    if (userId) {
+    // Disconnect from IB service
+    await ibService.disconnect();
+
+    // Update database
+    const settings = await db.botSettings.findFirst();
+    if (settings) {
       await db.botSettings.update({
-        where: { userId },
-        data: { ibConnected: false },
-      }).catch(() => {});
+        where: { id: settings.id },
+        data: { 
+          ibConnected: false,
+          isRunning: false 
+        }
+      });
     }
-    
+
+    console.log('[IB Disconnect] Disconnected successfully');
+
     return NextResponse.json({ 
-      success: true,
-      connected: false,
-      message: 'Disconnected successfully'
+      success: true, 
+      message: 'Disconnected from IB TWS/Gateway' 
     });
-  } catch (error) {
-    console.error('Error disconnecting from IB:', error);
+  } catch (error: any) {
+    console.error('IB Disconnect Error:', error);
     return NextResponse.json({ 
-      success: false,
-      error: 'Failed to disconnect' 
+      success: false, 
+      error: error.message || 'Disconnect failed' 
     }, { status: 500 });
   }
 }

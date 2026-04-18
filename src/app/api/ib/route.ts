@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { ibService, IBConfig, validateIBConfig } from '@/lib/ib-service';
 
 // GET - Get IB connection status
 export async function GET(request: NextRequest) {
@@ -14,8 +15,11 @@ export async function GET(request: NextRequest) {
     const accountType = settings?.accountType || 'simulation';
     const isSimulation = accountType === 'simulation' || accountType === 'SIMULATION';
     
+    // Check actual IB connection status
+    const isActuallyConnected = ibService.isConnected();
+    
     // In simulation mode, always show as "connected" for demo purposes
-    const effectiveConnected = isSimulation ? true : (settings?.ibConnected || false);
+    const effectiveConnected = isSimulation ? true : (isActuallyConnected || settings?.ibConnected || false);
 
     const status = {
       configured: !!(settings?.ibHost && settings?.ibPort),
@@ -27,9 +31,9 @@ export async function GET(request: NextRequest) {
       clientId: settings?.ibClientId || 1,
       message: isSimulation 
         ? 'Simulation mode - no IB connection required'
-        : settings?.ibConnected 
-          ? 'Connected to IB TWS/Gateway'
-          : 'Not connected - Start IB TWS/Gateway'
+        : isActuallyConnected 
+          ? '✅ Connected to IB TWS/Gateway'
+          : '❌ Not connected - Click Connect button'
     };
 
     return NextResponse.json({
@@ -43,76 +47,111 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Connect to IB
+// POST - Connect/Disconnect from IB - REAL CONNECTION
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, userId, host, port, clientId, accountType } = body;
 
+    console.log('[IB API] Action:', action, { host, port, clientId, accountType });
+
     if (action === 'connect') {
       const ibHost = host || '127.0.0.1';
-      const ibPort = port || 7497;
-      const ibClientId = clientId || 1;
-      const ibAccountType = accountType || 'paper';
+      const ibPort = parseInt(port) || 7497;
+      const ibClientId = parseInt(clientId) || 1;
+      const ibAccountType = accountType || (ibPort === 7497 ? 'paper' : 'live');
 
-      // Update or create settings
-      let settings = await db.botSettings.findFirst();
-      
-      if (!settings) {
-        // Create with a default user or without userId
-        settings = await db.botSettings.create({
-          data: {
-            userId: 'demo',
-            ibHost,
-            ibPort: Number(ibPort),
-            ibClientId: Number(ibClientId),
-            accountType: ibAccountType,
-            ibConnected: true,
-            isRunning: false,
-            telegramEnabled: false,
-            telegramBotToken: null,
-            telegramChatId: null,
-            defaultQuantity: 1,
-            maxRiskPerTrade: 100,
-            defaultExpiry: '0DTE',
-            positionSizeMode: 'AMOUNT',
-            positionSizePercent: 5,
-            positionSizeAmount: 500,
-            spxStrikeOffset: 5,
-            spxDeltaTarget: 0.3,
-            strikeSelectionMode: 'MANUAL',
-            contractPriceMin: 300,
-            contractPriceMax: 400,
+      // Validate configuration
+      const config: IBConfig = {
+        host: ibHost,
+        port: ibPort,
+        clientId: ibClientId,
+        accountType: ibAccountType
+      };
+
+      const validation = validateIBConfig(config);
+      if (!validation.valid) {
+        return NextResponse.json({ 
+          success: false, 
+          error: validation.errors.join(', ') 
+        }, { status: 400 });
+      }
+
+      // Configure IB service
+      ibService.configure(config);
+
+      // Attempt REAL connection
+      console.log('[IB API] Attempting real connection to:', ibHost, ':', ibPort);
+      const result = await ibService.connect();
+
+      if (result.success) {
+        // Update settings in database
+        let settings = await db.botSettings.findFirst();
+        
+        if (!settings) {
+          settings = await db.botSettings.create({
+            data: {
+              userId: 'demo',
+              ibHost,
+              ibPort,
+              ibClientId: ibClientId,
+              accountType: ibAccountType,
+              ibConnected: true,
+              isRunning: false,
+              telegramEnabled: false,
+              telegramBotToken: null,
+              telegramChatId: null,
+              defaultQuantity: 1,
+              maxRiskPerTrade: 100,
+              defaultExpiry: '0DTE',
+              positionSizeMode: 'AMOUNT',
+              positionSizePercent: 5,
+              positionSizeAmount: 500,
+              spxStrikeOffset: 5,
+              spxDeltaTarget: 0.3,
+              strikeSelectionMode: 'MANUAL',
+              contractPriceMin: 300,
+              contractPriceMax: 400,
+            }
+          });
+        } else {
+          settings = await db.botSettings.update({
+            where: { id: settings.id },
+            data: {
+              ibHost,
+              ibPort,
+              ibClientId: ibClientId,
+              accountType: ibAccountType,
+              ibConnected: true
+            }
+          });
+        }
+
+        console.log('✅ IB REAL Connection successful:', { host: ibHost, port: ibPort, accountType: ibAccountType });
+
+        return NextResponse.json({ 
+          success: true, 
+          message: result.message,
+          settings: {
+            host: ibHost,
+            port: ibPort,
+            clientId: ibClientId,
+            accountType: ibAccountType
           }
         });
       } else {
-        settings = await db.botSettings.update({
-          where: { id: settings.id },
-          data: {
-            ibHost,
-            ibPort: Number(ibPort),
-            ibClientId: Number(ibClientId),
-            accountType: ibAccountType,
-            ibConnected: true
-          }
-        });
+        // Connection failed
+        return NextResponse.json({ 
+          success: false, 
+          error: result.message 
+        }, { status: 200 });
       }
-
-      console.log('✅ IB Connection saved:', { host: ibHost, port: ibPort, accountType: ibAccountType });
-
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Connection settings saved. Make sure TWS/IB Gateway is running.',
-        settings: {
-          host: ibHost,
-          port: ibPort,
-          clientId: ibClientId,
-          accountType: ibAccountType
-        }
-      });
     }
 
     if (action === 'disconnect') {
+      // Disconnect from IB
+      await ibService.disconnect();
+      
       const settings = await db.botSettings.findFirst();
       if (settings) {
         await db.botSettings.update({
@@ -124,16 +163,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Disconnected from IB' });
     }
 
-    if (action === 'test') {
+    if (action === 'status') {
+      const isConnected = ibService.isConnected();
       return NextResponse.json({ 
         success: true, 
-        message: 'Test connection - Make sure TWS/Gateway is running on the specified port'
+        connected: isConnected,
+        message: isConnected ? 'Connected' : 'Not connected'
       });
     }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    if (action === 'test') {
+      // Test connection without saving
+      const testConfig: IBConfig = {
+        host: host || '127.0.0.1',
+        port: parseInt(port) || 7497,
+        clientId: 999,
+        accountType: accountType || 'paper'
+      };
+
+      ibService.configure(testConfig);
+      const result = await ibService.connect();
+      
+      if (result.success) {
+        await ibService.disconnect();
+      }
+
+      return NextResponse.json({ 
+        success: result.success,
+        message: result.message
+      });
+    }
+
+    return NextResponse.json({ error: 'Invalid action. Use: connect, disconnect, status, or test' }, { status: 400 });
   } catch (error: any) {
     console.error('IB API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || 'Unknown error' 
+    }, { status: 500 });
   }
 }

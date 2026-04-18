@@ -1,91 +1,107 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { ibService, IBConfig, validateIBConfig } from '@/lib/ib-service';
 
-// POST - Connect to Interactive Brokers
+// POST - Connect to IB - REAL CONNECTION
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    let userId = body.userId;
+    const body = await request.json();
+    const { userId, host, port, clientId, accountType } = body;
 
-    // If no userId or demo, find admin
-    if (!userId || userId === 'demo') {
-      const admin = await db.user.findFirst({
-        where: { isAdmin: true }
-      });
-      if (admin) userId = admin.id;
+    const ibHost = host || '127.0.0.1';
+    const ibPort = parseInt(port) || 7497;
+    const ibClientId = parseInt(clientId) || 1;
+    const ibAccountType = accountType || (ibPort === 7497 ? 'paper' : 'live');
+
+    console.log('[IB Connect] Connecting to:', ibHost, ':', ibPort);
+
+    // Validate configuration
+    const config: IBConfig = {
+      host: ibHost,
+      port: ibPort,
+      clientId: ibClientId,
+      accountType: ibAccountType
+    };
+
+    const validation = validateIBConfig(config);
+    if (!validation.valid) {
+      return NextResponse.json({ 
+        success: false, 
+        error: validation.errors.join(', ') 
+      }, { status: 400 });
     }
 
-    // Get settings
-    const settings = await db.botSettings.findUnique({
-      where: { userId },
-    });
+    // Configure IB service
+    ibService.configure(config);
 
-    const accountType = settings?.accountType || 'PAPER';
+    // Attempt REAL connection
+    const result = await ibService.connect();
 
-    // For Paper Trading mode, no IB connection needed
-    if (accountType === 'PAPER') {
-      // Update settings to show "connected" for paper trading
-      if (settings) {
-        await db.botSettings.update({
-          where: { userId },
-          data: { ibConnected: true },
+    if (result.success) {
+      // Update settings in database
+      let settings = await db.botSettings.findFirst();
+      
+      if (!settings) {
+        settings = await db.botSettings.create({
+          data: {
+            userId: userId || 'demo',
+            ibHost,
+            ibPort,
+            ibClientId: ibClientId,
+            accountType: ibAccountType,
+            ibConnected: true,
+            isRunning: false,
+            telegramEnabled: false,
+            telegramBotToken: null,
+            telegramChatId: null,
+            defaultQuantity: 1,
+            maxRiskPerTrade: 100,
+            defaultExpiry: '0DTE',
+            positionSizeMode: 'AMOUNT',
+            positionSizePercent: 5,
+            positionSizeAmount: 500,
+            spxStrikeOffset: 5,
+            spxDeltaTarget: 0.3,
+            strikeSelectionMode: 'MANUAL',
+            contractPriceMin: 300,
+            contractPriceMax: 400,
+          }
+        });
+      } else {
+        settings = await db.botSettings.update({
+          where: { id: settings.id },
+          data: {
+            ibHost,
+            ibPort,
+            ibClientId: ibClientId,
+            accountType: ibAccountType,
+            ibConnected: true
+          }
         });
       }
+
+      console.log('✅ IB REAL Connection successful:', { host: ibHost, port: ibPort });
 
       return NextResponse.json({ 
-        success: true,
-        connected: true,
-        mode: 'PAPER',
-        message: 'Paper Trading mode - no IB connection required'
-      });
-    }
-
-    // For LIVE mode, try to connect to IB service
-    try {
-      const response = await fetch('http://localhost:3003/ib/connect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          host: settings?.ibHost || '127.0.0.1',
-          port: settings?.ibPort || 7497,
-          clientId: settings?.ibClientId || 1
-        }),
-      });
-      
-      if (response.ok) {
-        await db.botSettings.update({
-          where: { userId },
-          data: { ibConnected: true },
-        });
-        
-        return NextResponse.json({ 
-          success: true, 
+        success: true, 
+        message: result.message,
+        ibStatus: {
           connected: true,
-          mode: 'LIVE'
-        });
-      }
-    } catch (err) {
-      console.log('IB service not available');
+          accountType: ibAccountType
+        },
+        settings
+      });
+    } else {
+      return NextResponse.json({ 
+        success: false, 
+        error: result.message 
+      }, { status: 200 });
     }
-    
-    // If IB service is not running
-    await db.botSettings.update({
-      where: { userId },
-      data: { ibConnected: false },
-    }).catch(() => {});
-    
+  } catch (error: any) {
+    console.error('IB Connect Error:', error);
     return NextResponse.json({ 
-      success: false,
-      connected: false,
-      error: 'IB service is not running. For Paper Trading, switch to PAPER mode.',
-      hint: 'If you want to use Paper Trading without IB, go to Settings and change Account Type to PAPER.'
-    }, { status: 503 });
-  } catch (error) {
-    console.error('Error connecting to IB:', error);
-    return NextResponse.json({ 
-      success: false,
-      error: 'Failed to connect to IB',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      success: false, 
+      error: error.message || 'Connection failed' 
     }, { status: 500 });
   }
 }
