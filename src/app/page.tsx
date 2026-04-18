@@ -3033,7 +3033,7 @@ export default function Dashboard() {
                               host: ibHost,
                               port: parseInt(ibPort) || 7497,
                               clientId: parseInt(ibClientId) || 1,
-                              accountType: ibPort === "7497" ? "paper" : "live"
+                              accountType: settings?.accountType || "simulation"
                             })
                           });
                           const data = await res.json();

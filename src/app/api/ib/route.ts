@@ -69,6 +69,61 @@ export async function POST(request: NextRequest) {
       const ibClientId = parseInt(clientId) || 1;
       const ibAccountType = accountType || (ibPort === 7497 ? 'paper' : 'live');
 
+      // Check if simulation mode - no real IB connection needed
+      if (ibAccountType === 'simulation') {
+        console.log('[IB API] Simulation mode - marking as connected');
+        
+        // Update database
+        let settings = await db.botSettings.findFirst();
+        
+        if (!settings) {
+          settings = await db.botSettings.create({
+            data: {
+              userId: 'demo',
+              accountType: 'simulation',
+              ibConnected: true,
+              isRunning: true,
+              ibHost: '127.0.0.1',
+              ibPort: 7497,
+              ibClientId: 1,
+              telegramEnabled: false,
+              telegramBotToken: null,
+              telegramChatId: null,
+              defaultQuantity: 1,
+              maxRiskPerTrade: 100,
+              defaultExpiry: '0DTE',
+              positionSizeMode: 'AMOUNT',
+              positionSizePercent: 5,
+              positionSizeAmount: 500,
+              spxStrikeOffset: 5,
+              spxDeltaTarget: 0.3,
+              strikeSelectionMode: 'MANUAL',
+              contractPriceMin: 300,
+              contractPriceMax: 400,
+            }
+          });
+        } else {
+          settings = await db.botSettings.update({
+            where: { id: settings.id },
+            data: {
+              accountType: 'simulation',
+              ibConnected: true,
+              isRunning: true
+            }
+          });
+        }
+
+        return NextResponse.json({ 
+          success: true, 
+          message: 'تم الاتصال في الوضع التجريبي',
+          settings: {
+            accountType: 'simulation',
+            connected: true
+          }
+        });
+      }
+
+      // For real IB connection (paper or live)
       // Validate configuration
       const config: IBConfig = {
         host: ibHost,
