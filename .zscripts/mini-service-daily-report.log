@@ -1,0 +1,21 @@
+[daily-report] Installing dependencies...
+bun install v1.3.12 (700fc117)
+
+Checked 1 install across 2 packages (no changes) [15.00ms]
+[daily-report] Running bun run dev...
+$ bun --hot index.t�📊 Daily Report Service Started
+⏰ Report will be sent at 23:00 (Asia/Riyadh)
+380 |     await sendDailyReport();
+381 |   }
+382 | }, CHECK_INTERVAL);
+383 | 
+384 | // HTTP Server
+385 | serve({
+      ^
+error: Failed to start server. Is port 3005 in use?
+ syscall: "listen",
+   errno: 0,
+    code: "EADDRINUSE"
+
+      at /home/z/my-project/mini-services/daily-report/index.ts:385:1
+      at loadAndEvaluateModule (2:1)
