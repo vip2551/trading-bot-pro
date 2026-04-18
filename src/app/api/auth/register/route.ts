@@ -77,9 +77,6 @@ export async function POST(request: NextRequest) {
             maxTradesPerDay: defaultPlan.maxTradesPerDay,
             maxActiveTrades: defaultPlan.maxActiveTrades
           }
-        },
-        botSettings: {
-          create: {}
         }
       },
       include: {

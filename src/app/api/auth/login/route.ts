@@ -32,9 +32,8 @@ export async function POST(request: NextRequest) {
     // Find user
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
-      include: { 
-        subscription: { include: { plan: true } },
-        botSettings: true 
+      include: {
+        subscription: { include: { plan: true } }
       }
     });
 
