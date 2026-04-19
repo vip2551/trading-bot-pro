@@ -651,6 +651,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [saving, setSaving] = useState(false);
   const [togglingBot, setTogglingBot] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false); // Track if settings loaded once
   const [ibStatus, setIbStatus] = useState<IBStatus | null>(null);
 
   // Stats
@@ -877,55 +878,58 @@ export default function Dashboard() {
         pnl: closed.reduce((sum: number, t: Trade) => sum + (t.pnl || 0), 0),
       });
 
-      // Fetch settings with timeout
-      const settingsRes = await fetchWithTimeout('/api/settings?userId=demo', 5000);
-      const settingsData = await settingsRes.json();
-      
-      if (settingsData?.settings) {
-        const s = settingsData.settings;
-        setSettings(s);
-        setIsBotRunning(s.isRunning || false);
-        setStrikeSelectionMode(s.strikeSelectionMode || "OFFSET");
-        setContractPriceMin(String(s.contractPriceMin || 300));
-        setContractPriceMax(String(s.contractPriceMax || 400));
-        setSpxStrikeOffset(String(s.spxStrikeOffset || 5));
-        setSpxDeltaTarget(String(s.spxDeltaTarget || 0.3));
-        setIbHost(s.ibHost || "127.0.0.1");
-        setIbPort(String(s.ibPort || 7497));
-        setIbClientId(String(s.ibClientId || 1));
-        setTelegramEnabled(s.telegramEnabled || false);
-        setTelegramBotToken(s.telegramBotToken || "");
-        setTelegramChatId(s.telegramChatId || "");
+      // Fetch settings with timeout - only load once on initial load
+      if (!settingsLoaded) {
+        const settingsRes = await fetchWithTimeout('/api/settings?userId=demo', 5000);
+        const settingsData = await settingsRes.json();
         
-        // Load new advanced settings
-        setTradingMode(s.tradingMode || "BALANCED");
-        setActiveSymbols(s.activeSymbols ? s.activeSymbols.split(",") : ["SPX"]);
-        setPrimarySymbol(s.primarySymbol || "SPX");
-        setContractSizeMode(s.contractSizeMode || "FIXED");
-        setFixedContracts(String(s.fixedContracts || 1));
-        setContractsPercentage(String(s.contractsPercentage || 2));
-        setContractsRiskAmount(String(s.contractsRiskAmount || 100));
-        setMinContracts(String(s.minContracts || 1));
-        setMaxContracts(String(s.maxContracts || 10));
-        setMinConfidenceConservative(String(s.minConfidenceConservative || 80));
-        setMinConfidenceBalanced(String(s.minConfidenceBalanced || 70));
-        setMinConfidenceAggressive(String(s.minConfidenceAggressive || 60));
-        setUseRSI(s.useRSI ?? true);
-        setUseMACD(s.useMACD ?? true);
-        setUseBollinger(s.useBollinger ?? true);
-        setUseEMA(s.useEMA ?? true);
-        setUseADX(s.useADX ?? true);
-        setDetectExplosions(s.detectExplosions ?? true);
-        setDetectReversals(s.detectReversals ?? true);
-        setDetectInstitutional(s.detectInstitutional ?? true);
-        setDetectSupplyDemand(s.detectSupplyDemand ?? true);
-        setExplosionVolumeThreshold(String(s.explosionVolumeThreshold || 2.0));
-        setExplosionVolatilityThreshold(String(s.explosionVolatilityThreshold || 1.5));
-        setAutoTradingStartTime(s.autoTradingStartTime || "09:30");
-        setAutoTradingEndTime(s.autoTradingEndTime || "16:00");
-        setProcessTradingViewSignals(s.processTradingViewSignals ?? true);
-        setAutoSelectStrike(s.autoSelectStrike ?? true);
-        setAutoDetermineDirection(s.autoDetermineDirection ?? true);
+        if (settingsData?.settings) {
+          const s = settingsData.settings;
+          setSettings(s);
+          setIsBotRunning(s.isRunning || false);
+          setStrikeSelectionMode(s.strikeSelectionMode || "OFFSET");
+          setContractPriceMin(String(s.contractPriceMin || 300));
+          setContractPriceMax(String(s.contractPriceMax || 400));
+          setSpxStrikeOffset(String(s.spxStrikeOffset || 5));
+          setSpxDeltaTarget(String(s.spxDeltaTarget || 0.3));
+          setIbHost(s.ibHost || "127.0.0.1");
+          setIbPort(String(s.ibPort || 7497));
+          setIbClientId(String(s.ibClientId || 1));
+          setTelegramEnabled(s.telegramEnabled || false);
+          setTelegramBotToken(s.telegramBotToken || "");
+          setTelegramChatId(s.telegramChatId || "");
+          
+          // Load new advanced settings
+          setTradingMode(s.tradingMode || "BALANCED");
+          setActiveSymbols(s.activeSymbols ? s.activeSymbols.split(",") : ["SPX"]);
+          setPrimarySymbol(s.primarySymbol || "SPX");
+          setContractSizeMode(s.contractSizeMode || "FIXED");
+          setFixedContracts(String(s.fixedContracts || 1));
+          setContractsPercentage(String(s.contractsPercentage || 2));
+          setContractsRiskAmount(String(s.contractsRiskAmount || 100));
+          setMinContracts(String(s.minContracts || 1));
+          setMaxContracts(String(s.maxContracts || 10));
+          setMinConfidenceConservative(String(s.minConfidenceConservative || 80));
+          setMinConfidenceBalanced(String(s.minConfidenceBalanced || 70));
+          setMinConfidenceAggressive(String(s.minConfidenceAggressive || 60));
+          setUseRSI(s.useRSI ?? true);
+          setUseMACD(s.useMACD ?? true);
+          setUseBollinger(s.useBollinger ?? true);
+          setUseEMA(s.useEMA ?? true);
+          setUseADX(s.useADX ?? true);
+          setDetectExplosions(s.detectExplosions ?? true);
+          setDetectReversals(s.detectReversals ?? true);
+          setDetectInstitutional(s.detectInstitutional ?? true);
+          setDetectSupplyDemand(s.detectSupplyDemand ?? true);
+          setExplosionVolumeThreshold(String(s.explosionVolumeThreshold || 2.0));
+          setExplosionVolatilityThreshold(String(s.explosionVolatilityThreshold || 1.5));
+          setAutoTradingStartTime(s.autoTradingStartTime || "09:30");
+          setAutoTradingEndTime(s.autoTradingEndTime || "16:00");
+          setProcessTradingViewSignals(s.processTradingViewSignals ?? true);
+          setAutoSelectStrike(s.autoSelectStrike ?? true);
+          setAutoDetermineDirection(s.autoDetermineDirection ?? true);
+          setSettingsLoaded(true);
+        }
       }
 
       try {
