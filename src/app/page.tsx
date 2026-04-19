@@ -3461,16 +3461,360 @@ export default function Dashboard() {
 
           {/* Notifications */}
           <TabsContent value="notifications" className="space-y-6">
+            {/* Status Card */}
+            <Card className={`border-2 ${telegramEnabled && telegramBotToken && telegramChatId ? 'border-green-500/50 bg-green-500/5' : 'border-amber-500/50 bg-amber-500/5'}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-12 w-12 rounded-full flex items-center justify-center ${telegramEnabled && telegramBotToken && telegramChatId ? 'bg-green-500' : 'bg-amber-500/20'}`}>
+                      <MessageSquare className={`h-6 w-6 ${telegramEnabled && telegramBotToken && telegramChatId ? 'text-white' : 'text-amber-500'}`} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold">
+                        {telegramEnabled && telegramBotToken && telegramChatId
+                          ? (lang === "ar" ? "🟢 Telegram متصل" : "🟢 Telegram Connected")
+                          : (lang === "ar" ? "Telegram غير مُعد" : "Telegram Not Configured")}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {telegramEnabled && telegramBotToken && telegramChatId
+                          ? (lang === "ar" ? "ستصل الإشعارات إلى Telegram" : "Notifications will be sent to Telegram")
+                          : (lang === "ar" ? "أدخل التوكن ومعرف المحادثة للتفعيل" : "Enter token and chat ID to enable")}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={telegramEnabled}
+                    onCheckedChange={(checked) => {
+                      setTelegramEnabled(checked);
+                      saveSettings({ telegramEnabled: checked, telegramBotToken, telegramChatId });
+                    }}
+                    disabled={!telegramBotToken || !telegramChatId}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Telegram Configuration */}
             <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5" />{t.telegramNotifications}</CardTitle><CardDescription>{t.receiveNotifications}</CardDescription></CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-blue-500" />
+                  {lang === "ar" ? "إعدادات Telegram" : "Telegram Configuration"}
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar" ? "أدخل بيانات البوت الخاص بك" : "Enter your bot credentials"}
+                </CardDescription>
+              </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between"><div><Label>{t.enableTelegram}</Label><p className="text-sm text-muted-foreground">{t.receiveOnTelegram}</p></div><Switch checked={telegramEnabled} onCheckedChange={(checked) => { setTelegramEnabled(checked); saveSettings({ telegramEnabled: checked, telegramBotToken, telegramChatId }); }} /></div>
-                <Separator />
-                <div className="space-y-2"><Label>{t.botToken}</Label><Input type="text" placeholder="123456:ABC-DEF..." value={telegramBotToken} onChange={(e) => { setTelegramBotToken(e.target.value); setIsEditingTelegram(true); }} /></div>
-                <div className="space-y-2"><Label>{t.chatId}</Label><Input placeholder="-1001234567890" value={telegramChatId} onChange={(e) => { setTelegramChatId(e.target.value); setIsEditingTelegram(true); }} /></div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4" />
+                    {t.botToken}
+                  </Label>
+                  <Input
+                    type="password"
+                    placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                    value={telegramBotToken}
+                    onChange={(e) => {
+                      setTelegramBotToken(e.target.value);
+                      setIsEditingTelegram(true);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {lang === "ar"
+                      ? "احصل عليه من @BotFather في Telegram"
+                      : "Get it from @BotFather in Telegram"}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    {t.chatId}
+                  </Label>
+                  <Input
+                    placeholder="-1001234567890"
+                    value={telegramChatId}
+                    onChange={(e) => {
+                      setTelegramChatId(e.target.value);
+                      setIsEditingTelegram(true);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {lang === "ar"
+                      ? "معرف المحادثة أو القناة (أرسل رسالة للبوت ثم احصل على ID من @userinfobot)"
+                      : "Chat or Channel ID (message your bot, then get ID from @userinfobot)"}
+                  </p>
+                </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => { setIsEditingTelegram(false); saveSettings({ telegramEnabled, telegramBotToken, telegramChatId }); }} disabled={saving} className="flex-1">{saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}{t.saveSettings}</Button>
-                  <Button variant="outline" onClick={testTelegram} disabled={!telegramBotToken || !telegramChatId}>{t.test}</Button>
+                  <Button
+                    onClick={() => {
+                      setIsEditingTelegram(false);
+                      saveSettings({ telegramEnabled, telegramBotToken, telegramChatId });
+                    }}
+                    disabled={saving}
+                    className="flex-1"
+                  >
+                    {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    {t.saveSettings}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={testTelegram}
+                    disabled={!telegramBotToken || !telegramChatId}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {t.test}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Types */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-orange-500" />
+                  {lang === "ar" ? "أنواع الإشعارات" : "Notification Types"}
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar" ? "اختر الإشعارات التي تريد استلامها" : "Choose which notifications to receive"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Trade Opened */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    <div>
+                      <Label className="font-medium">
+                        {lang === "ar" ? "صفقة جديدة مفتوحة" : "Trade Opened"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === "ar" ? "إشعار عند فتح صفقة جديدة" : "Notify when a new trade opens"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                {/* Trade Closed */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <Label className="font-medium">
+                        {lang === "ar" ? "صفقة مغلقة" : "Trade Closed"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === "ar" ? "إشعار عند إغلاق صفقة مع الربح/الخسارة" : "Notify when trade closes with P&L"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                {/* Daily Report */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-purple-500" />
+                    <div>
+                      <Label className="font-medium">
+                        {lang === "ar" ? "التقرير اليومي" : "Daily Report"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === "ar" ? "ملخص يومي للأداء والصفقات" : "Daily performance summary"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                {/* Error Alerts */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    <div>
+                      <Label className="font-medium">
+                        {lang === "ar" ? "تنبيهات الأخطاء" : "Error Alerts"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === "ar" ? "إشعار عند حدوث خطأ في النظام" : "Notify on system errors"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                {/* Whale Activity */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <Fish className="h-5 w-5 text-teal-500" />
+                    <div>
+                      <Label className="font-medium">
+                        {lang === "ar" ? "نشاط الحيتان" : "Whale Activity"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === "ar" ? "إشعار عند رصد حركات كبيرة" : "Notify on large market moves"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                {/* Price Alerts */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="h-5 w-5 text-yellow-500" />
+                    <div>
+                      <Label className="font-medium">
+                        {lang === "ar" ? "تنبيهات السعر" : "Price Alerts"}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {lang === "ar" ? "تحديثات الأسعار المهمة" : "Important price updates"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Language */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="h-5 w-5 text-primary" />
+                  {lang === "ar" ? "لغة الإشعارات" : "Notification Language"}
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar" ? "اختر لغة إشعارات Telegram" : "Choose Telegram notification language"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={lang}
+                  onValueChange={(value) => {
+                    setLang(value as "en" | "ar");
+                    toast.success(value === "ar" ? "تم تغيير اللغة إلى العربية" : "Language changed to English");
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ar">
+                      <div className="flex items-center gap-2">
+                        <span>🇸🇦</span>
+                        <span>العربية (Arabic)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="en">
+                      <div className="flex items-center gap-2">
+                        <span>🇺🇸</span>
+                        <span>English</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {lang === "ar"
+                    ? "جميع إشعارات Telegram ستُرسل بالعربية"
+                    : "All Telegram notifications will be sent in English"}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Setup Guide */}
+            <Card className="border-2 border-blue-500/20 bg-blue-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-600">
+                  <HelpCircle className="h-5 w-5" />
+                  {lang === "ar" ? "دليل الإعداد" : "Setup Guide"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                    <div>
+                      <p className="font-medium">{lang === "ar" ? "إنشاء بوت Telegram" : "Create Telegram Bot"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {lang === "ar"
+                          ? "افتح Telegram وابحث عن @BotFather، أرسل /newbot واتبع التعليمات"
+                          : "Open Telegram, search @BotFather, send /newbot and follow instructions"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                    <div>
+                      <p className="font-medium">{lang === "ar" ? "احصل على Chat ID" : "Get Chat ID"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {lang === "ar"
+                          ? "أرسل رسالة لبوتك، ثم ابحث عن @userinfobot للحصول على ID"
+                          : "Message your bot, then search @userinfobot to get your ID"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                    <div>
+                      <p className="font-medium">{lang === "ar" ? "أدخل البيانات" : "Enter Credentials"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {lang === "ar"
+                          ? "الصق التوكن وChat ID في الحقول أعلاه واضغط حفظ"
+                          : "Paste token and Chat ID in fields above, click Save"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">✓</div>
+                    <div>
+                      <p className="font-medium">{lang === "ar" ? "اختبر الاتصال" : "Test Connection"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {lang === "ar"
+                          ? "اضغط زر الاختبار للتأكد من وصول الإشعارات"
+                          : "Click Test button to verify notifications work"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Example Notification */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-gray-500" />
+                  {lang === "ar" ? "مثال على الإشعار" : "Notification Example"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">
+{lang === "ar" ? `🔔 *صفقة جديدة مفتوحة*
+
+📈 *SPX* 📈 كول
+━━━━━━━━━━━━━━━
+📌 *الاسترايك:* 5025
+💰 *سعر الاسترايك:* $3.25
+📊 *السعر الحالي:* $5002.50
+📝 *عدد العقود:* 2
+💵 *سعر الدخول:* $650.00
+⏰ *الوقت:* 2024/01/15 10:30:00
+
+🤖 _بوت التداول الاحترافي_` : `🔔 *New Trade Opened*
+
+📈 *SPX* 📈 CALL
+━━━━━━━━━━━━━━━
+📌 *Strike:* 5025
+💰 *Strike Price:* $3.25
+📊 *Stock Price:* $5002.50
+📝 *Contracts:* 2
+💵 *Entry Price:* $650.00
+⏰ *Time:* 2024/01/15 10:30:00 AM
+
+🤖 _Trading Bot Pro_`}
                 </div>
               </CardContent>
             </Card>
