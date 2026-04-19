@@ -671,6 +671,37 @@ export default function Dashboard() {
   // VPS Settings
   const [vpsIP, setVpsIP] = useState("");
 
+  // Platform Integration Settings
+  const [platformConnections, setPlatformConnections] = useState<{binance: boolean; coinbase: boolean; exness: boolean}>({
+    binance: false,
+    coinbase: false,
+    exness: false,
+  });
+  const [platformLoading, setPlatformLoading] = useState<string | null>(null);
+  
+  // Binance
+  const [binanceApiKey, setBinanceApiKey] = useState("");
+  const [binanceApiSecret, setBinanceApiSecret] = useState("");
+  const [binanceTestnet, setBinanceTestnet] = useState(true);
+  
+  // Coinbase
+  const [coinbaseApiKey, setCoinbaseApiKey] = useState("");
+  const [coinbaseApiSecret, setCoinbaseApiSecret] = useState("");
+  const [coinbasePassphrase, setCoinbasePassphrase] = useState("");
+  const [coinbaseSandbox, setCoinbaseSandbox] = useState(true);
+  
+  // Exness
+  const [exnessApiKey, setExnessApiKey] = useState("");
+  const [exnessApiSecret, setExnessApiSecret] = useState("");
+  const [exnessAccountId, setExnessAccountId] = useState("");
+  const [exnessDemo, setExnessDemo] = useState(true);
+  
+  // Quick Trade
+  const [quickTradePlatform, setQuickTradePlatform] = useState("binance");
+  const [quickTradeSymbol, setQuickTradeSymbol] = useState("BTCUSDT");
+  const [quickTradeSide, setQuickTradeSide] = useState<"BUY" | "SELL">("BUY");
+  const [quickTradeQuantity, setQuickTradeQuantity] = useState("0.001");
+
   // Telegram Settings
   const [telegramEnabled, setTelegramEnabled] = useState(false);
   const [telegramBotToken, setTelegramBotToken] = useState("");
@@ -1300,6 +1331,125 @@ export default function Dashboard() {
       }
     } catch {
       toast.error(t.failed);
+    }
+  };
+  
+  // Platform Integration Functions
+  const connectPlatform = async (platform: 'binance' | 'coinbase' | 'exness') => {
+    setPlatformLoading(platform);
+    try {
+      let config: any = {};
+      
+      if (platform === 'binance') {
+        if (!binanceApiKey || !binanceApiSecret) {
+          toast.error(lang === "ar" ? "يرجى إدخال API Key و API Secret" : "Please enter API Key and API Secret");
+          setPlatformLoading(null);
+          return;
+        }
+        config = {
+          apiKey: binanceApiKey,
+          apiSecret: binanceApiSecret,
+          testnet: binanceTestnet,
+        };
+      } else if (platform === 'coinbase') {
+        if (!coinbaseApiKey || !coinbaseApiSecret || !coinbasePassphrase) {
+          toast.error(lang === "ar" ? "يرجى إدخال جميع البيانات" : "Please enter all credentials");
+          setPlatformLoading(null);
+          return;
+        }
+        config = {
+          apiKey: coinbaseApiKey,
+          apiSecret: coinbaseApiSecret,
+          passphrase: coinbasePassphrase,
+          sandbox: coinbaseSandbox,
+        };
+      } else if (platform === 'exness') {
+        if (!exnessApiKey || !exnessApiSecret) {
+          toast.error(lang === "ar" ? "يرجى إدخال API Key و API Secret" : "Please enter API Key and API Secret");
+          setPlatformLoading(null);
+          return;
+        }
+        config = {
+          apiKey: exnessApiKey,
+          apiSecret: exnessApiSecret,
+          accountId: exnessAccountId,
+          demo: exnessDemo,
+        };
+      }
+      
+      const res = await fetch("/api/platforms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          platform,
+          action: "configure",
+          config,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setPlatformConnections(prev => ({ ...prev, [platform]: true }));
+        toast.success(lang === "ar" ? `تم ربط ${platform} بنجاح!` : `${platform} connected successfully!`);
+      } else {
+        toast.error(data.message || (lang === "ar" ? "فشل الاتصال" : "Connection failed"));
+      }
+    } catch (error: any) {
+      toast.error(error.message || (lang === "ar" ? "فشل الاتصال" : "Connection failed"));
+    } finally {
+      setPlatformLoading(null);
+    }
+  };
+  
+  const disconnectPlatform = async (platform: 'binance' | 'coinbase' | 'exness') => {
+    try {
+      await fetch("/api/platforms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          platform,
+          action: "disconnect",
+        }),
+      });
+      
+      setPlatformConnections(prev => ({ ...prev, [platform]: false }));
+      toast.success(lang === "ar" ? `تم قطع اتصال ${platform}` : `${platform} disconnected`);
+    } catch {
+      toast.error(lang === "ar" ? "فشل قطع الاتصال" : "Failed to disconnect");
+    }
+  };
+  
+  const executeQuickTrade = async () => {
+    const platformKey = quickTradePlatform as keyof typeof platformConnections;
+    if (!platformConnections[platformKey] && quickTradePlatform !== 'ib') {
+      toast.error(lang === "ar" ? "المنصة غير متصلة" : "Platform not connected");
+      return;
+    }
+    
+    try {
+      const res = await fetch("/api/platforms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          platform: quickTradePlatform,
+          action: "market_order",
+          symbol: quickTradeSymbol,
+          side: quickTradeSide,
+          quantity: parseFloat(quickTradeQuantity),
+          volume: parseFloat(quickTradeQuantity),
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        toast.success(lang === "ar" ? "تم تنفيذ الصفقة!" : "Trade executed!");
+      } else {
+        toast.error(data.message || (lang === "ar" ? "فشل التنفيذ" : "Execution failed"));
+      }
+    } catch {
+      toast.error(lang === "ar" ? "فشل الاتصال" : "Connection failed");
     }
   };
   
@@ -4556,7 +4706,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Platform Integration - Binance, Coinbase */}
+          {/* Platform Integration - Binance, Coinbase, Exness */}
           <TabsContent value="platforms" className="space-y-6">
             {/* Header */}
             <Card className="border-2 border-yellow-500/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5">
@@ -4577,7 +4727,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Binance */}
               <Card className="border-2 border-yellow-500/20">
                 <CardHeader>
@@ -4589,36 +4739,65 @@ export default function Dashboard() {
                       <div>
                         <CardTitle>Binance</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {lang === "ar" ? "أكبر منصة تداول عملات رقمية" : "Largest crypto trading platform"}
+                          {lang === "ar" ? "عملات رقمية (Spot & Futures)" : "Crypto (Spot & Futures)"}
                         </p>
                       </div>
                     </div>
-                    <Switch />
+                    <Badge variant={platformConnections.binance ? "default" : "secondary"} className={platformConnections.binance ? "bg-green-500" : ""}>
+                      {platformConnections.binance ? (lang === "ar" ? "متصل" : "Connected") : (lang === "ar" ? "غير متصل" : "Offline")}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>API Key</Label>
-                    <Input type="password" placeholder="Enter your Binance API Key" />
+                    <Label className="text-xs">API Key</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Binance API Key"
+                      value={binanceApiKey}
+                      onChange={(e) => setBinanceApiKey(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>API Secret</Label>
-                    <Input type="password" placeholder="Enter your Binance API Secret" />
+                    <Label className="text-xs">API Secret</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Binance API Secret"
+                      value={binanceApiSecret}
+                      onChange={(e) => setBinanceApiSecret(e.target.value)}
+                    />
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                    <span className="text-sm">{lang === "ar" ? "وضع الاختبار (Testnet)" : "Testnet Mode"}</span>
-                    <Switch defaultChecked />
+                    <div className="flex items-center gap-2">
+                      <TestTube className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm">{lang === "ar" ? "وضع التجريبي (Testnet)" : "Testnet Mode"}</span>
+                    </div>
+                    <Switch 
+                      checked={binanceTestnet}
+                      onCheckedChange={setBinanceTestnet}
+                    />
                   </div>
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-sm text-blue-600">
-                      {lang === "ar" 
-                        ? "💡 أنشئ API Key من إعدادات الحساب في Binance مع تفعيل صلاحيات التداول فقط"
-                        : "💡 Create API Key from Binance Account Settings with trading permissions only"}
-                    </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => connectPlatform('binance')}
+                      disabled={platformLoading === 'binance'}
+                    >
+                      {platformLoading === 'binance' ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {lang === "ar" ? "ربط" : "Connect"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => disconnectPlatform('binance')}
+                      disabled={!platformConnections.binance}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button className="w-full">
-                    {lang === "ar" ? "ربط Binance" : "Connect Binance"}
-                  </Button>
                 </CardContent>
               </Card>
 
@@ -4631,38 +4810,157 @@ export default function Dashboard() {
                         <span className="text-2xl font-bold text-blue-500">C</span>
                       </div>
                       <div>
-                        <CardTitle>Coinbase</CardTitle>
+                        <CardTitle>Coinbase Pro</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {lang === "ar" ? "منصة موثوقة للعملات الرقمية" : "Trusted crypto platform"}
+                          {lang === "ar" ? "عملات رقمية متقدمة" : "Advanced Crypto Trading"}
                         </p>
                       </div>
                     </div>
-                    <Switch />
+                    <Badge variant={platformConnections.coinbase ? "default" : "secondary"} className={platformConnections.coinbase ? "bg-green-500" : ""}>
+                      {platformConnections.coinbase ? (lang === "ar" ? "متصل" : "Connected") : (lang === "ar" ? "غير متصل" : "Offline")}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>API Key</Label>
-                    <Input type="password" placeholder="Enter your Coinbase API Key" />
+                    <Label className="text-xs">API Key</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Coinbase API Key"
+                      value={coinbaseApiKey}
+                      onChange={(e) => setCoinbaseApiKey(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>API Secret</Label>
-                    <Input type="password" placeholder="Enter your Coinbase API Secret" />
+                    <Label className="text-xs">API Secret</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Coinbase API Secret"
+                      value={coinbaseApiSecret}
+                      onChange={(e) => setCoinbaseApiSecret(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Passphrase</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Passphrase"
+                      value={coinbasePassphrase}
+                      onChange={(e) => setCoinbasePassphrase(e.target.value)}
+                    />
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                    <span className="text-sm">{lang === "ar" ? "وضع Sandbox" : "Sandbox Mode"}</span>
-                    <Switch defaultChecked />
+                    <div className="flex items-center gap-2">
+                      <TestTube className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm">{lang === "ar" ? "وضع Sandbox" : "Sandbox Mode"}</span>
+                    </div>
+                    <Switch 
+                      checked={coinbaseSandbox}
+                      onCheckedChange={setCoinbaseSandbox}
+                    />
                   </div>
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-sm text-blue-600">
-                      {lang === "ar"
-                        ? "💡 استخدم Coinbase Pro API للوصول لميزات التداول المتقدمة"
-                        : "💡 Use Coinbase Pro API for advanced trading features"}
-                    </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => connectPlatform('coinbase')}
+                      disabled={platformLoading === 'coinbase'}
+                    >
+                      {platformLoading === 'coinbase' ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {lang === "ar" ? "ربط" : "Connect"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => disconnectPlatform('coinbase')}
+                      disabled={!platformConnections.coinbase}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button className="w-full">
-                    {lang === "ar" ? "ربط Coinbase" : "Connect Coinbase"}
-                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Exness */}
+              <Card className="border-2 border-emerald-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-emerald-500">E</span>
+                      </div>
+                      <div>
+                        <CardTitle>Exness</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {lang === "ar" ? "فوركس ومعادن" : "Forex & Metals"}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={platformConnections.exness ? "default" : "secondary"} className={platformConnections.exness ? "bg-green-500" : ""}>
+                      {platformConnections.exness ? (lang === "ar" ? "متصل" : "Connected") : (lang === "ar" ? "غير متصل" : "Offline")}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">API Key</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Exness API Key"
+                      value={exnessApiKey}
+                      onChange={(e) => setExnessApiKey(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">API Secret</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter Exness API Secret"
+                      value={exnessApiSecret}
+                      onChange={(e) => setExnessApiSecret(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{lang === "ar" ? "رقم الحساب" : "Account ID"}</Label>
+                    <Input 
+                      placeholder="Enter Account ID"
+                      value={exnessAccountId}
+                      onChange={(e) => setExnessAccountId(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <TestTube className="h-4 w-4 text-emerald-500" />
+                      <span className="text-sm">{lang === "ar" ? "حساب تجريبي (Demo)" : "Demo Account"}</span>
+                    </div>
+                    <Switch 
+                      checked={exnessDemo}
+                      onCheckedChange={setExnessDemo}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => connectPlatform('exness')}
+                      disabled={platformLoading === 'exness'}
+                    >
+                      {platformLoading === 'exness' ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {lang === "ar" ? "ربط" : "Connect"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => disconnectPlatform('exness')}
+                      disabled={!platformConnections.exness}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -4672,31 +4970,33 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-                        <span className="text-2xl font-bold text-green-500">IB</span>
+                        <span className="text-xl font-bold text-green-500">IB</span>
                       </div>
                       <div>
                         <CardTitle>Interactive Brokers</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {lang === "ar" ? "وسيط عالمي للأسهم والخيارات" : "Global broker for stocks & options"}
+                          {lang === "ar" ? "أسهم وخيارات" : "Stocks & Options"}
                         </p>
                       </div>
                     </div>
-                    <Switch checked={ibStatus?.connected} />
+                    <Badge variant={ibStatus?.connected ? "default" : "secondary"} className={ibStatus?.connected ? "bg-green-500" : ""}>
+                      {ibStatus?.connected ? (lang === "ar" ? "متصل" : "Connected") : (lang === "ar" ? "غير متصل" : "Offline")}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label className="text-xs">{lang === "ar" ? "المضيف" : "Host"}</Label>
-                      <Input value={ibHost} onChange={(e) => setIbHost(e.target.value)} />
+                      <Input value={ibHost} onChange={(e) => setIbHost(e.target.value)} className="h-8" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label className="text-xs">{lang === "ar" ? "المنفذ" : "Port"}</Label>
-                      <Input value={ibPort} onChange={(e) => setIbPort(e.target.value)} />
+                      <Input value={ibPort} onChange={(e) => setIbPort(e.target.value)} className="h-8" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label className="text-xs">Client ID</Label>
-                      <Input value={ibClientId} onChange={(e) => setIbClientId(e.target.value)} />
+                      <Input value={ibClientId} onChange={(e) => setIbClientId(e.target.value)} className="h-8" />
                     </div>
                   </div>
                   <div className={`p-3 rounded-lg ${ibStatus?.connected ? 'bg-green-500/10 border border-green-500/20' : 'bg-amber-500/10 border border-amber-500/20'}`}>
@@ -4709,58 +5009,15 @@ export default function Dashboard() {
                       <span className="text-sm">
                         {ibStatus?.connected 
                           ? (lang === "ar" ? `متصل (${ibStatus.accountType})` : `Connected (${ibStatus.accountType})`)
-                          : (lang === "ar" ? "غير متصل - شغّل TWS أو Gateway" : "Not connected - Start TWS or Gateway")}
+                          : (lang === "ar" ? "شغّل TWS أو Gateway" : "Start TWS or Gateway")}
                       </span>
                     </div>
                   </div>
-                  <Button className="w-full">
-                    {lang === "ar" ? "ربط Interactive Brokers" : "Connect Interactive Brokers"}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Kraken */}
-              <Card className="border-2 border-purple-500/20">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                        <span className="text-2xl font-bold text-purple-500">K</span>
-                      </div>
-                      <div>
-                        <CardTitle>Kraken</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          {lang === "ar" ? "منصة آمنة للعملات الرقمية" : "Secure crypto exchange"}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>API Key</Label>
-                    <Input type="password" placeholder="Enter your Kraken API Key" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>API Secret</Label>
-                    <Input type="password" placeholder="Enter your Kraken API Secret" />
-                  </div>
-                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <p className="text-sm text-purple-600">
-                      {lang === "ar"
-                        ? "💡 يدعم Kraken التداول بالهامش والعقود الآجلة"
-                        : "💡 Kraken supports margin trading and futures"}
-                    </p>
-                  </div>
-                  <Button className="w-full">
-                    {lang === "ar" ? "ربط Kraken" : "Connect Kraken"}
-                  </Button>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Connection Status */}
+            {/* Connection Status Summary */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -4770,31 +5027,112 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/30 text-center">
-                    <p className="text-sm text-muted-foreground">Binance</p>
-                    <Badge variant="secondary" className="mt-2">
-                      {lang === "ar" ? "غير متصل" : "Disconnected"}
-                    </Badge>
+                  <div className={`p-4 rounded-lg ${platformConnections.binance ? 'bg-green-500/10 border border-green-500/20' : 'bg-muted/30'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Binance</span>
+                      {platformConnections.binance && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {binanceTestnet ? (lang === "ar" ? "تجريبي" : "Testnet") : (lang === "ar" ? "حقيقي" : "Live")}
+                    </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/30 text-center">
-                    <p className="text-sm text-muted-foreground">Coinbase</p>
-                    <Badge variant="secondary" className="mt-2">
-                      {lang === "ar" ? "غير متصل" : "Disconnected"}
-                    </Badge>
+                  <div className={`p-4 rounded-lg ${platformConnections.coinbase ? 'bg-green-500/10 border border-green-500/20' : 'bg-muted/30'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Coinbase</span>
+                      {platformConnections.coinbase && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {coinbaseSandbox ? (lang === "ar" ? "تجريبي" : "Sandbox") : (lang === "ar" ? "حقيقي" : "Live")}
+                    </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/30 text-center">
-                    <p className="text-sm text-muted-foreground">Interactive Brokers</p>
-                    <Badge variant={ibStatus?.connected ? "default" : "secondary"} className="mt-2">
-                      {ibStatus?.connected 
-                        ? (lang === "ar" ? "متصل" : "Connected")
-                        : (lang === "ar" ? "غير متصل" : "Disconnected")}
-                    </Badge>
+                  <div className={`p-4 rounded-lg ${platformConnections.exness ? 'bg-green-500/10 border border-green-500/20' : 'bg-muted/30'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Exness</span>
+                      {platformConnections.exness && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {exnessDemo ? (lang === "ar" ? "تجريبي" : "Demo") : (lang === "ar" ? "حقيقي" : "Live")}
+                    </p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/30 text-center">
-                    <p className="text-sm text-muted-foreground">Kraken</p>
-                    <Badge variant="secondary" className="mt-2">
-                      {lang === "ar" ? "غير متصل" : "Disconnected"}
-                    </Badge>
+                  <div className={`p-4 rounded-lg ${ibStatus?.connected ? 'bg-green-500/10 border border-green-500/20' : 'bg-muted/30'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">IB</span>
+                      {ibStatus?.connected && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {ibStatus?.connected ? ibStatus.accountType : (lang === "ar" ? "غير متصل" : "Offline")}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Trade Panel */}
+            <Card className="border-2 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  {lang === "ar" ? "تداول سريع" : "Quick Trade"}
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar" ? "تنفيذ صفقة سريعة على أي منصة متصلة" : "Execute quick trade on any connected platform"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">{lang === "ar" ? "المنصة" : "Platform"}</Label>
+                    <Select value={quickTradePlatform} onValueChange={setQuickTradePlatform}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="binance">Binance</SelectItem>
+                        <SelectItem value="coinbase">Coinbase</SelectItem>
+                        <SelectItem value="exness">Exness</SelectItem>
+                        <SelectItem value="ib">Interactive Brokers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{lang === "ar" ? "الرمز" : "Symbol"}</Label>
+                    <Input 
+                      placeholder={quickTradePlatform === 'exness' ? 'EURUSD' : 'BTCUSDT'}
+                      value={quickTradeSymbol}
+                      onChange={(e) => setQuickTradeSymbol(e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{lang === "ar" ? "الاتجاه" : "Side"}</Label>
+                    <Select value={quickTradeSide} onValueChange={setQuickTradeSide}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BUY">{lang === "ar" ? "شراء" : "BUY"}</SelectItem>
+                        <SelectItem value="SELL">{lang === "ar" ? "بيع" : "SELL"}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{lang === "ar" ? "الكمية" : "Quantity"}</Label>
+                    <Input 
+                      type="number"
+                      placeholder="0.01"
+                      value={quickTradeQuantity}
+                      onChange={(e) => setQuickTradeQuantity(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">&nbsp;</Label>
+                    <Button 
+                      className="w-full"
+                      onClick={executeQuickTrade}
+                      disabled={!platformConnections[quickTradePlatform as keyof typeof platformConnections]}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {lang === "ar" ? "تنفيذ" : "Execute"}
+                    </Button>
                   </div>
                 </div>
               </CardContent>

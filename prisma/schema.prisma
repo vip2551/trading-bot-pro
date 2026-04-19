@@ -890,3 +890,44 @@ model WebhookSecret {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// Platform Settings - إعدادات منصات التداول
+model PlatformSettings {
+  id              String   @id @default(cuid())
+  userId          String?
+
+  // Platform Info
+  platform        String   // BINANCE, COINBASE, EXNESS, INTERACTIVE_BROKERS
+  displayName     String?  // "My Binance Account"
+  
+  // API Credentials (Encrypted in production)
+  apiKey          String?
+  apiSecret       String?
+  passphrase      String?  // For Coinbase
+  accountId       String?  // For Exness
+  
+  // Mode
+  isDemo          Boolean  @default(true)  // true = demo/testnet, false = real
+  isConnected     Boolean  @default(false)
+  
+  // Trading Settings
+  defaultLeverage Float    @default(1)
+  defaultLotSize  Float    @default(0.01)
+  maxPositionSize Float?
+  allowedSymbols  String?  // JSON array of allowed trading pairs
+  
+  // Connection Status
+  lastConnectedAt DateTime?
+  connectionError String?
+  
+  // Statistics
+  totalTrades     Int      @default(0)
+  totalVolume     Float    @default(0)
+  totalPnL        Float    @default(0)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
