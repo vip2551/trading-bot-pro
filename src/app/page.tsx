@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Bot,
   Play,
@@ -651,7 +651,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [saving, setSaving] = useState(false);
   const [togglingBot, setTogglingBot] = useState(false);
-  const [settingsLoaded, setSettingsLoaded] = useState(false); // Track if settings loaded once
+  const settingsLoadedRef = useRef(false); // Use ref to track if settings loaded once
   const [ibStatus, setIbStatus] = useState<IBStatus | null>(null);
 
   // Stats
@@ -879,7 +879,7 @@ export default function Dashboard() {
       });
 
       // Fetch settings with timeout - only load once on initial load
-      if (!settingsLoaded) {
+      if (!settingsLoadedRef.current) {
         const settingsRes = await fetchWithTimeout('/api/settings?userId=demo', 5000);
         const settingsData = await settingsRes.json();
         
@@ -928,7 +928,7 @@ export default function Dashboard() {
           setProcessTradingViewSignals(s.processTradingViewSignals ?? true);
           setAutoSelectStrike(s.autoSelectStrike ?? true);
           setAutoDetermineDirection(s.autoDetermineDirection ?? true);
-          setSettingsLoaded(true);
+          settingsLoadedRef.current = true;
         }
       }
 
