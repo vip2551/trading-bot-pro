@@ -8,11 +8,8 @@ $ bun --hot run index.ts
 🔄 Starting trade monitor service...
 242 | 
 243 | // Run immediately
-244 | monitorTrades().catch(console.error);
-245 | 
-246 | // HTTP Server
-247 | serve({
-      ^
+244 | monitorTrerror: script "dev" was terminated by signal SIGTERM (Polite quit request)
+  ^
 error: Failed to start server. Is port 3004 in use?
  syscall: "listen",
    errno: 0,
@@ -20,3 +17,4 @@ error: Failed to start server. Is port 3004 in use?
 
       at /home/z/my-project/mini-services/trade-monitor/index.ts:247:1
       at loadAndEvaluateModule (2:1)
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

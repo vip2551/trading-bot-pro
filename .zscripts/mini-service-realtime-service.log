@@ -12,4 +12,4 @@ $ bun --hot46 |     }
                  ^
 error: Failed to start server. Is port 3004 in use?
       at emitError (node:events:51:13)
-ts:51:13)
+error: screrror: script "dev" was terminated by signal SIGTERM (Polite quit request)

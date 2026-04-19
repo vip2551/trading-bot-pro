@@ -313,6 +313,55 @@ model BotSettings {
   avoidLowLiquidityHours Boolean  @default(true)    // تجنب ساعات السيولة المنخفضة
   avoidNewsEvents        Boolean  @default(false)   // تجنب أحداث الأخبار
 
+  // === NEW: Advanced Trading Settings ===
+  
+  // Trading Mode (وضع التداول)
+  tradingMode           String   @default("BALANCED") // CONSERVATIVE, BALANCED, AGGRESSIVE
+  
+  // Multiple Symbols (رموز متعددة)
+  activeSymbols         String   @default("SPX")     // JSON array: ["SPX", "SPY", "QQQ"]
+  primarySymbol         String   @default("SPX")     // الرمز الرئيسي
+  
+  // Contract Quantity Settings (إعدادات كمية العقود)
+  contractSizeMode      String   @default("FIXED")   // FIXED, PERCENTAGE, RISK_BASED, CONFIDENCE
+  fixedContracts        Int      @default(1)         // عدد ثابت من العقود
+  contractsPercentage   Float    @default(2.0)       // نسبة من المحفظة (%)
+  contractsRiskAmount   Float    @default(100.0)     // مبلغ المخاطرة بالدولار
+  minContracts          Int      @default(1)         // أقل عدد عقود
+  maxContracts          Int      @default(10)        // أكثر عدد عقود
+  
+  // Confidence Thresholds (حدود الثقة)
+  minConfidenceConservative Float @default(80.0)    // حد الثقة للمحافظ
+  minConfidenceBalanced     Float @default(70.0)    // حد الثقة للمتوازن
+  minConfidenceAggressive   Float @default(60.0)    // حد الثقة للعدواني
+  
+  // Technical Indicators Settings (إعدادات المؤشرات الفنية)
+  useRSI               Boolean  @default(true)
+  useMACD              Boolean  @default(true)
+  useBollinger         Boolean  @default(true)
+  useEMA               Boolean  @default(true)
+  useADX               Boolean  @default(true)
+  
+  // Signal Detection Settings (إعدادات كشف الإشارات)
+  detectExplosions     Boolean  @default(true)      // كشف انفجارات الأسعار
+  detectReversals      Boolean  @default(true)      // كشف الانعكاسات
+  detectInstitutional  Boolean  @default(true)      // كشف النشاط المؤسسي
+  detectSupplyDemand   Boolean  @default(true)      // كشف مناطق العرض والطلب
+  
+  // Explosion Detection Thresholds
+  explosionVolumeThreshold Float @default(2.0)      // حد حجم التداول للانفجار
+  explosionVolatilityThreshold Float @default(1.5)  // حد التقلب للانفجار
+  
+  // Auto Trading Control (التحكم في التداول التلقائي)
+  autoTradingEnabled   Boolean  @default(false)     // تفعيل التداول التلقائي
+  autoTradingStartTime String   @default("09:30")   // وقت البدء
+  autoTradingEndTime   String   @default("16:00")   // وقت الانتهاء
+  
+  // Signal Processing (معالجة الإشارات)
+  processTradingViewSignals Boolean @default(true)  // معالجة إشارات TradingView
+  autoSelectStrike     Boolean  @default(true)      // اختيار الاسترايك تلقائياً
+  autoDetermineDirection Boolean @default(true)     // تحديد الاتجاه تلقائياً
+
   // Risk Management Defaults
   defaultStopLoss     Float?
   defaultTakeProfit   Float?

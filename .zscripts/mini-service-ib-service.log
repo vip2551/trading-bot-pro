@@ -16,3 +16,4 @@ $ bun --hot index.ts
 💧 Liquidity check: ✅ (min 100 contracts)
 📈 Max slippage: 1%
 Current mode: PAPER
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
