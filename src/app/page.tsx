@@ -64,6 +64,8 @@ import {
   Eye,
   Server,
   Terminal,
+  Download,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1605,6 +1607,10 @@ export default function Dashboard() {
               <TabsTrigger value="help" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><HelpCircle className="h-4 w-4 text-sky-500" /><span className="hidden sm:inline text-xs">{t.help}</span></TabsTrigger>
               <TabsTrigger value="plans" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Crown className="h-4 w-4 text-yellow-500" /><span className="hidden sm:inline text-xs">{t.plans}</span></TabsTrigger>
               <TabsTrigger value="advanced" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Settings className="h-4 w-4 text-violet-500" /><span className="hidden sm:inline text-xs">{lang === "ar" ? "متقدم" : "Advanced"}</span></TabsTrigger>
+              <TabsTrigger value="platforms" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Globe className="h-4 w-4 text-yellow-500" /><span className="hidden sm:inline text-xs">{lang === "ar" ? "منصات" : "Platforms"}</span></TabsTrigger>
+              <TabsTrigger value="push" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Smartphone className="h-4 w-4 text-pink-500" /><span className="hidden sm:inline text-xs">{lang === "ar" ? "Push" : "Push"}</span></TabsTrigger>
+              <TabsTrigger value="technical" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><LineChart className="h-4 w-4 text-teal-500" /><span className="hidden sm:inline text-xs">{lang === "ar" ? "تحليل" : "Analysis"}</span></TabsTrigger>
+              <TabsTrigger value="mobile" className="flex items-center gap-1 px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Smartphone className="h-4 w-4 text-indigo-500" /><span className="hidden sm:inline text-xs">{lang === "ar" ? "موبايل" : "Mobile"}</span></TabsTrigger>
             </TabsList>
           </div>
 
@@ -4548,6 +4554,938 @@ export default function Dashboard() {
                 </Button>
               </div>
             </div>
+          </TabsContent>
+
+          {/* Platform Integration - Binance, Coinbase */}
+          <TabsContent value="platforms" className="space-y-6">
+            {/* Header */}
+            <Card className="border-2 border-yellow-500/30 bg-gradient-to-r from-yellow-500/5 to-orange-500/5">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <Globe className="h-8 w-8 text-yellow-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">
+                      {lang === "ar" ? "التكامل مع المنصات" : "Platform Integration"}
+                    </h2>
+                    <p className="text-muted-foreground">
+                      {lang === "ar" ? "ربط البوت بمنصات التداول لتنفيذ الصفقات تلقائياً" : "Connect bot to trading platforms for automatic execution"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Binance */}
+              <Card className="border-2 border-yellow-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-yellow-500">B</span>
+                      </div>
+                      <div>
+                        <CardTitle>Binance</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {lang === "ar" ? "أكبر منصة تداول عملات رقمية" : "Largest crypto trading platform"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>API Key</Label>
+                    <Input type="password" placeholder="Enter your Binance API Key" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>API Secret</Label>
+                    <Input type="password" placeholder="Enter your Binance API Secret" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <span className="text-sm">{lang === "ar" ? "وضع الاختبار (Testnet)" : "Testnet Mode"}</span>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-sm text-blue-600">
+                      {lang === "ar" 
+                        ? "💡 أنشئ API Key من إعدادات الحساب في Binance مع تفعيل صلاحيات التداول فقط"
+                        : "💡 Create API Key from Binance Account Settings with trading permissions only"}
+                    </p>
+                  </div>
+                  <Button className="w-full">
+                    {lang === "ar" ? "ربط Binance" : "Connect Binance"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Coinbase */}
+              <Card className="border-2 border-blue-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-blue-500">C</span>
+                      </div>
+                      <div>
+                        <CardTitle>Coinbase</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {lang === "ar" ? "منصة موثوقة للعملات الرقمية" : "Trusted crypto platform"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>API Key</Label>
+                    <Input type="password" placeholder="Enter your Coinbase API Key" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>API Secret</Label>
+                    <Input type="password" placeholder="Enter your Coinbase API Secret" />
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <span className="text-sm">{lang === "ar" ? "وضع Sandbox" : "Sandbox Mode"}</span>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-sm text-blue-600">
+                      {lang === "ar"
+                        ? "💡 استخدم Coinbase Pro API للوصول لميزات التداول المتقدمة"
+                        : "💡 Use Coinbase Pro API for advanced trading features"}
+                    </p>
+                  </div>
+                  <Button className="w-full">
+                    {lang === "ar" ? "ربط Coinbase" : "Connect Coinbase"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Interactive Brokers */}
+              <Card className="border-2 border-green-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-green-500">IB</span>
+                      </div>
+                      <div>
+                        <CardTitle>Interactive Brokers</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {lang === "ar" ? "وسيط عالمي للأسهم والخيارات" : "Global broker for stocks & options"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch checked={ibStatus?.connected} />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs">{lang === "ar" ? "المضيف" : "Host"}</Label>
+                      <Input value={ibHost} onChange={(e) => setIbHost(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">{lang === "ar" ? "المنفذ" : "Port"}</Label>
+                      <Input value={ibPort} onChange={(e) => setIbPort(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Client ID</Label>
+                      <Input value={ibClientId} onChange={(e) => setIbClientId(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className={`p-3 rounded-lg ${ibStatus?.connected ? 'bg-green-500/10 border border-green-500/20' : 'bg-amber-500/10 border border-amber-500/20'}`}>
+                    <div className="flex items-center gap-2">
+                      {ibStatus?.connected ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      )}
+                      <span className="text-sm">
+                        {ibStatus?.connected 
+                          ? (lang === "ar" ? `متصل (${ibStatus.accountType})` : `Connected (${ibStatus.accountType})`)
+                          : (lang === "ar" ? "غير متصل - شغّل TWS أو Gateway" : "Not connected - Start TWS or Gateway")}
+                      </span>
+                    </div>
+                  </div>
+                  <Button className="w-full">
+                    {lang === "ar" ? "ربط Interactive Brokers" : "Connect Interactive Brokers"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Kraken */}
+              <Card className="border-2 border-purple-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-purple-500">K</span>
+                      </div>
+                      <div>
+                        <CardTitle>Kraken</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {lang === "ar" ? "منصة آمنة للعملات الرقمية" : "Secure crypto exchange"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>API Key</Label>
+                    <Input type="password" placeholder="Enter your Kraken API Key" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>API Secret</Label>
+                    <Input type="password" placeholder="Enter your Kraken API Secret" />
+                  </div>
+                  <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                    <p className="text-sm text-purple-600">
+                      {lang === "ar"
+                        ? "💡 يدعم Kraken التداول بالهامش والعقود الآجلة"
+                        : "💡 Kraken supports margin trading and futures"}
+                    </p>
+                  </div>
+                  <Button className="w-full">
+                    {lang === "ar" ? "ربط Kraken" : "Connect Kraken"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Connection Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  {lang === "ar" ? "حالة الاتصالات" : "Connection Status"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/30 text-center">
+                    <p className="text-sm text-muted-foreground">Binance</p>
+                    <Badge variant="secondary" className="mt-2">
+                      {lang === "ar" ? "غير متصل" : "Disconnected"}
+                    </Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/30 text-center">
+                    <p className="text-sm text-muted-foreground">Coinbase</p>
+                    <Badge variant="secondary" className="mt-2">
+                      {lang === "ar" ? "غير متصل" : "Disconnected"}
+                    </Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/30 text-center">
+                    <p className="text-sm text-muted-foreground">Interactive Brokers</p>
+                    <Badge variant={ibStatus?.connected ? "default" : "secondary"} className="mt-2">
+                      {ibStatus?.connected 
+                        ? (lang === "ar" ? "متصل" : "Connected")
+                        : (lang === "ar" ? "غير متصل" : "Disconnected")}
+                    </Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/30 text-center">
+                    <p className="text-sm text-muted-foreground">Kraken</p>
+                    <Badge variant="secondary" className="mt-2">
+                      {lang === "ar" ? "غير متصل" : "Disconnected"}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Push Notifications */}
+          <TabsContent value="push" className="space-y-6">
+            {/* Header */}
+            <Card className="border-2 border-pink-500/30 bg-gradient-to-r from-pink-500/5 to-purple-500/5">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-pink-500/20 flex items-center justify-center">
+                    <Smartphone className="h-8 w-8 text-pink-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">
+                      {lang === "ar" ? "إشعارات Push للهاتف" : "Push Notifications"}
+                    </h2>
+                    <p className="text-muted-foreground">
+                      {lang === "ar" ? "استلم تنبيهات فورية على هاتفك" : "Get instant alerts on your phone"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Firebase Cloud Messaging */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-orange-500" />
+                    Firebase Cloud Messaging
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar" ? "إشعارات عبر Google Firebase" : "Notifications via Google Firebase"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">FCM {lang === "ar" ? "مفعّل" : "Enabled"}</span>
+                    <Switch />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Server Key</Label>
+                    <Input type="password" placeholder="Enter FCM Server Key" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Device Token</Label>
+                    <Input placeholder="Enter device FCM token" />
+                  </div>
+                  <Button variant="outline" className="w-full">
+                    <Send className="h-4 w-4 mr-2" />
+                    {lang === "ar" ? "إرسال رسالة اختبار" : "Send Test Push"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Web Push */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-blue-500" />
+                    Web Push API
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar" ? "إشعارات المتصفح المباشرة" : "Direct browser notifications"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">Web Push {lang === "ar" ? "مفعّل" : "Enabled"}</span>
+                    <Switch />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>VAPID Public Key</Label>
+                    <Input placeholder="Enter VAPID public key" />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      if ('Notification' in window) {
+                        Notification.requestPermission().then((permission) => {
+                          if (permission === 'granted') {
+                            new Notification('Trading Bot Pro', {
+                              body: lang === "ar" ? 'إشعارات Push مفعّلة!' : 'Push notifications enabled!',
+                              icon: '/favicon.ico'
+                            });
+                            toast.success(lang === "ar" ? "تم تفعيل الإشعارات!" : "Notifications enabled!");
+                          }
+                        });
+                      }
+                    }}
+                  >
+                    <Bell className="h-4 w-4 mr-2" />
+                    {lang === "ar" ? "طلب الإذن" : "Request Permission"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Notification Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-primary" />
+                  {lang === "ar" ? "إعدادات الإشعارات" : "Notification Settings"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="h-5 w-5 text-green-500" />
+                      <div>
+                        <p className="font-medium">{lang === "ar" ? "إشارة تداول قوية" : "Strong Trading Signal"}</p>
+                        <p className="text-xs text-muted-foreground">{lang === "ar" ? "ثقة 80%+" : "80%+ confidence"}</p>
+                      </div>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                      <div>
+                        <p className="font-medium">{lang === "ar" ? "تحذير مخاطرة" : "Risk Warning"}</p>
+                        <p className="text-xs text-muted-foreground">{lang === "ar" ? "تغير كبير في السوق" : "Major market change"}</p>
+                      </div>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <p className="font-medium">{lang === "ar" ? "صفقة منفذة" : "Trade Executed"}</p>
+                        <p className="text-xs text-muted-foreground">{lang === "ar" ? "تأكيد التنفيذ" : "Execution confirmation"}</p>
+                      </div>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-purple-500" />
+                      <div>
+                        <p className="font-medium">{lang === "ar" ? "تقرير يومي" : "Daily Report"}</p>
+                        <p className="text-xs text-muted-foreground">{lang === "ar" ? "ملخص الأداء" : "Performance summary"}</p>
+                      </div>
+                    </div>
+                    <Switch />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{lang === "ar" ? "ساعات الهدوء (من)" : "Quiet Hours (From)"}</Label>
+                    <Input type="time" defaultValue="22:00" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{lang === "ar" ? "ساعات الهدوء (إلى)" : "Quiet Hours (To)"}</Label>
+                    <Input type="time" defaultValue="08:00" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Setup */}
+            <Card className="border-2 border-green-500/20 bg-green-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  {lang === "ar" ? "الإعداد السريع" : "Quick Setup"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
+                    <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center">1</div>
+                    <p>{lang === "ar" ? "فعّل إشعارات Push بالضغط على الزر أعلاه" : "Enable Push notifications by clicking the button above"}</p>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
+                    <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center">2</div>
+                    <p>{lang === "ar" ? "اسمح للمتصفح بإرسال الإشعارات" : "Allow browser to send notifications"}</p>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-background">
+                    <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center">✓</div>
+                    <p>{lang === "ar" ? "ستصلك الإشعارات فورياً على جهازك" : "You'll receive instant notifications on your device"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Advanced Technical Analysis */}
+          <TabsContent value="technical" className="space-y-6">
+            {/* Header */}
+            <Card className="border-2 border-teal-500/30 bg-gradient-to-r from-teal-500/5 to-cyan-500/5">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-teal-500/20 flex items-center justify-center">
+                    <LineChart className="h-8 w-8 text-teal-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">
+                      {lang === "ar" ? "التحليل الفني المتقدم" : "Advanced Technical Analysis"}
+                    </h2>
+                    <p className="text-muted-foreground">
+                      {lang === "ar" ? "أدوات احترافية لتحليل السوق" : "Professional tools for market analysis"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Fibonacci Retracement */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingDown className="h-5 w-5 text-yellow-500" />
+                    Fibonacci Retracement
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar" ? "تحديد مستويات الدعم والمقاومة" : "Identify support and resistance levels"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">{lang === "ar" ? "تفعيل Fibonacci" : "Enable Fibonacci"}</span>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-muted/30">
+                    <p className="text-sm font-medium mb-2">{lang === "ar" ? "المستويات الرئيسية:" : "Key Levels:"}</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span>23.6%</span><Badge variant="outline">{lang === "ar" ? "تصحيح خفيف" : "Light retracement"}</Badge></div>
+                      <div className="flex justify-between"><span>38.2%</span><Badge variant="outline" className="bg-blue-500/10">{lang === "ar" ? "تصحيح متوسط ⭐" : "Moderate retracement ⭐"}</Badge></div>
+                      <div className="flex justify-between"><span>50.0%</span><Badge variant="outline">{lang === "ar" ? "تصحيح نصف" : "Half retracement"}</Badge></div>
+                      <div className="flex justify-between"><span>61.8%</span><Badge variant="outline" className="bg-green-500/10">{lang === "ar" ? "التصحيح الذهبي ⭐⭐" : "Golden ratio ⭐⭐"}</Badge></div>
+                      <div className="flex justify-between"><span>78.6%</span><Badge variant="outline">{lang === "ar" ? "تصحيح عميق" : "Deep retracement"}</Badge></div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{lang === "ar" ? "أعلى سعر" : "High Price"}</Label>
+                      <Input type="number" placeholder="5100" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{lang === "ar" ? "أدنى سعر" : "Low Price"}</Label>
+                      <Input type="number" placeholder="4800" />
+                    </div>
+                  </div>
+
+                  <Button className="w-full">
+                    {lang === "ar" ? "حساب مستويات Fibonacci" : "Calculate Fibonacci Levels"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Elliott Wave Theory */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-purple-500" />
+                    Elliott Wave Theory
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar" ? "تحليل أنماط الموجات" : "Wave pattern analysis"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">{lang === "ar" ? "تفعيل Elliott Wave" : "Enable Elliott Wave"}</span>
+                    <Switch defaultChecked />
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-muted/30">
+                    <p className="text-sm font-medium mb-2">{lang === "ar" ? "الأنماط الأساسية:" : "Basic Patterns:"}</p>
+                    <div className="space-y-3">
+                      <div className="p-2 rounded bg-green-500/10">
+                        <p className="text-sm font-medium">{lang === "ar" ? "الدافع (5 موجات)" : "Impulse (5 waves)"}</p>
+                        <p className="text-xs text-muted-foreground">1-2-3-4-5 {lang === "ar" ? "(اتجاه رئيسي)" : "(main trend)"}</p>
+                      </div>
+                      <div className="p-2 rounded bg-red-500/10">
+                        <p className="text-sm font-medium">{lang === "ar" ? "التصحيحي (3 موجات)" : "Corrective (3 waves)"}</p>
+                        <p className="text-xs text-muted-foreground">A-B-C {lang === "ar" ? "(عكس الاتجاه)" : "(counter trend)"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{lang === "ar" ? "الموجة الحالية المكتشفة" : "Detected Current Wave"}</Label>
+                    <Select defaultValue="3">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Wave 1</SelectItem>
+                        <SelectItem value="2">Wave 2</SelectItem>
+                        <SelectItem value="3">Wave 3 ({lang === "ar" ? "الأقوى" : "Strongest"})</SelectItem>
+                        <SelectItem value="4">Wave 4</SelectItem>
+                        <SelectItem value="5">Wave 5</SelectItem>
+                        <SelectItem value="A">Wave A</SelectItem>
+                        <SelectItem value="B">Wave B</SelectItem>
+                        <SelectItem value="C">Wave C</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button className="w-full">
+                    {lang === "ar" ? "تحليل Elliott Wave" : "Analyze Elliott Wave"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Harmonic Patterns */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Compass className="h-5 w-5 text-cyan-500" />
+                    {lang === "ar" ? "الأنماط التوافقية" : "Harmonic Patterns"}
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar" ? "كشف الأنماط السعرية المتقدمة" : "Detect advanced price patterns"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Gartley', 'Butterfly', 'Bat', 'Crab', 'Shark', 'Cypher'].map((pattern) => (
+                      <div key={pattern} className="flex items-center justify-between p-2 rounded-lg border">
+                        <span className="text-sm">{pattern}</span>
+                        <Switch defaultChecked />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                    <p className="text-sm text-cyan-600">
+                      {lang === "ar"
+                        ? "💡 الأنماط التوافقية تحدد نقاط الانعكاس بدقة عالية"
+                        : "💡 Harmonic patterns identify reversal points with high precision"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pivot Points */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-orange-500" />
+                    Pivot Points
+                  </CardTitle>
+                  <CardDescription>
+                    {lang === "ar" ? "نقاط المحور اليومية" : "Daily pivot points"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>{lang === "ar" ? "طريقة الحساب" : "Calculation Method"}</Label>
+                    <Select defaultValue="standard">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="fibonacci">Fibonacci</SelectItem>
+                        <SelectItem value="camarilla">Camarilla</SelectItem>
+                        <SelectItem value="woodie">Woodie</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-muted/30 text-sm">
+                    <div className="space-y-2">
+                      <div className="flex justify-between"><span className="text-red-500">R3</span><span>5150.00</span></div>
+                      <div className="flex justify-between"><span className="text-red-400">R2</span><span>5100.00</span></div>
+                      <div className="flex justify-between"><span className="text-orange-500">R1</span><span>5050.00</span></div>
+                      <div className="flex justify-between font-bold"><span className="text-primary">Pivot</span><span>5000.00</span></div>
+                      <div className="flex justify-between"><span className="text-green-500">S1</span><span>4950.00</span></div>
+                      <div className="flex justify-between"><span className="text-green-400">S2</span><span>4900.00</span></div>
+                      <div className="flex justify-between"><span className="text-green-500">S3</span><span>4850.00</span></div>
+                    </div>
+                  </div>
+
+                  <Button className="w-full">
+                    {lang === "ar" ? "حساب Pivot Points" : "Calculate Pivot Points"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Combined Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-violet-500" />
+                  {lang === "ar" ? "التحليل المُجمّع" : "Combined Analysis"}
+                </CardTitle>
+                <CardDescription>
+                  {lang === "ar" ? "نتيجة جميع المؤشرات معاً" : "Result of all indicators combined"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                    <p className="text-3xl font-bold text-green-500">85%</p>
+                    <p className="text-sm text-muted-foreground">{lang === "ar" ? "إشارة صعودية" : "Bullish Signal"}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/30 text-center">
+                    <p className="text-3xl font-bold">SPX</p>
+                    <p className="text-sm text-muted-foreground">{lang === "ar" ? "الرمز الحالي" : "Current Symbol"}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+                    <p className="text-3xl font-bold text-blue-500">Wave 3</p>
+                    <p className="text-sm text-muted-foreground">{lang === "ar" ? "الموجة الحالية" : "Current Wave"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Mobile App */}
+          <TabsContent value="mobile" className="space-y-6">
+            {/* Header */}
+            <Card className="border-2 border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 to-purple-500/5">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <Smartphone className="h-8 w-8 text-indigo-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">
+                      {lang === "ar" ? "تطبيق الموبايل" : "Mobile App"}
+                    </h2>
+                    <p className="text-muted-foreground">
+                      {lang === "ar" ? "تداول من أي مكان مع تطبيقنا" : "Trade from anywhere with our app"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* App Features */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-yellow-500" />
+                    {lang === "ar" ? "مميزات التطبيق" : "App Features"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "لوحة تحكم مصغرة" : "Mini Dashboard"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "إشعارات فورية" : "Instant Alerts"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "رسم بياني تفاعلي" : "Interactive Charts"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "تنفيذ الصفقات" : "Execute Trades"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "سجل العمليات" : "Trade History"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "إعدادات البوت" : "Bot Settings"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "وضع الظلام" : "Dark Mode"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{lang === "ar" ? "دعم العربية" : "Arabic Support"}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Download Options */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5 text-primary" />
+                    {lang === "ar" ? "تحميل التطبيق" : "Download App"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* iOS */}
+                  <div className="p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-400 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-gray-900 flex items-center justify-center">
+                        <span className="text-white text-2xl"></span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">iOS App</p>
+                        <p className="text-sm text-muted-foreground">App Store</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        {lang === "ar" ? "قريباً" : "Coming Soon"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Android */}
+                  <div className="p-4 rounded-lg border-2 border-green-200 dark:border-green-800 hover:border-green-400 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-green-500 flex items-center justify-center">
+                        <span className="text-white text-2xl"></span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">Android App</p>
+                        <p className="text-sm text-muted-foreground">Google Play</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        {lang === "ar" ? "قريباً" : "Coming Soon"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* PWA */}
+                  <div className="p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-blue-500 flex items-center justify-center">
+                        <Globe className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">PWA</p>
+                        <p className="text-sm text-muted-foreground">{lang === "ar" ? "تطبيق ويب تقدمي" : "Progressive Web App"}</p>
+                      </div>
+                      <Button 
+                        size="sm"
+                        onClick={() => {
+                          toast.success(lang === "ar" ? "يمكنك إضافة الموقع للشاشة الرئيسية!" : "You can add this site to home screen!");
+                        }}
+                      >
+                        {lang === "ar" ? "متوفر" : "Available"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* PWA Instructions */}
+            <Card className="border-2 border-blue-500/20 bg-blue-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-600">
+                  <Globe className="h-5 w-5" />
+                  {lang === "ar" ? "كيفية تثبيت PWA" : "How to Install PWA"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <p className="font-medium">{lang === "ar" ? "على iPhone/iPad:" : "On iPhone/iPad:"}</p>
+                    <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                      <li>{lang === "ar" ? "افتح الموقع في Safari" : "Open this site in Safari"}</li>
+                      <li>{lang === "ar" ? "اضغط زر المشاركة" : "Tap the Share button"}</li>
+                      <li>{lang === "ar" ? "اختر \"إضافة إلى الشاشة الرئيسية\"" : "Select \"Add to Home Screen\""}</li>
+                      <li>{lang === "ar" ? "اضغط \"إضافة\"" : "Tap \"Add\""}</li>
+                    </ol>
+                  </div>
+                  <div className="space-y-3">
+                    <p className="font-medium">{lang === "ar" ? "على Android:" : "On Android:"}</p>
+                    <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+                      <li>{lang === "ar" ? "افتح الموقع في Chrome" : "Open this site in Chrome"}</li>
+                      <li>{lang === "ar" ? "اضغط على القائمة ( ثلاث نقاط)" : "Tap the menu (⋮ three dots)"}</li>
+                      <li>{lang === "ar" ? "اختر \"إضافة إلى الشاشة الرئيسية\"" : "Select \"Add to Home Screen\""}</li>
+                      <li>{lang === "ar" ? "اضغط \"تثبيت\"" : "Tap \"Install\""}</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* App Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-primary" />
+                  {lang === "ar" ? "معاينة التطبيق" : "App Preview"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Dashboard Preview */}
+                  <div className="aspect-[9/16] bg-gradient-to-b from-background to-muted rounded-2xl border-2 overflow-hidden">
+                    <div className="p-4 border-b bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold">Trading Bot</span>
+                        <Badge className="bg-green-500 text-xs">Live</Badge>
+                      </div>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="h-16 rounded-lg bg-muted animate-pulse" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="h-12 rounded-lg bg-muted animate-pulse" />
+                        <div className="h-12 rounded-lg bg-muted animate-pulse" />
+                      </div>
+                      <div className="h-20 rounded-lg bg-muted animate-pulse" />
+                      <div className="h-20 rounded-lg bg-muted animate-pulse" />
+                    </div>
+                  </div>
+
+                  {/* Chart Preview */}
+                  <div className="aspect-[9/16] bg-gradient-to-b from-background to-muted rounded-2xl border-2 overflow-hidden">
+                    <div className="p-4 border-b bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold">SPX</span>
+                        <span className="text-green-500 text-sm">+1.2%</span>
+                      </div>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div className="h-32 rounded-lg bg-gradient-to-t from-green-500/20 to-transparent" />
+                      <div className="flex justify-between text-xs text-muted-foreground px-2">
+                        <span>9:30</span>
+                        <span>12:00</span>
+                        <span>16:00</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        <div className="p-2 rounded bg-muted text-center text-xs">
+                          <p className="text-muted-foreground">High</p>
+                          <p className="font-bold">5,025</p>
+                        </div>
+                        <div className="p-2 rounded bg-muted text-center text-xs">
+                          <p className="text-muted-foreground">Low</p>
+                          <p className="font-bold">4,985</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trades Preview */}
+                  <div className="aspect-[9/16] bg-gradient-to-b from-background to-muted rounded-2xl border-2 overflow-hidden">
+                    <div className="p-4 border-b bg-muted/50">
+                      <span className="font-bold">{lang === "ar" ? "الصفقات" : "Trades"}</span>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="p-2 rounded-lg bg-muted flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <span className="text-sm font-medium">SPX</span>
+                          </div>
+                          <span className="text-xs text-green-500">+$250</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* QR Code */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-primary" />
+                  {lang === "ar" ? "امسح للتحميل" : "Scan to Download"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center">
+                <div className="h-40 w-40 bg-white rounded-lg flex items-center justify-center border-2">
+                  <div className="text-center">
+                    <QrCode className="h-24 w-24 text-gray-400 mx-auto" />
+                    <p className="text-xs text-muted-foreground mt-2">QR Code</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-4">
+                  {lang === "ar" 
+                    ? "امسح الرمز بكاميرا هاتفك للوصول للتطبيق"
+                    : "Scan with your phone camera to access the app"}
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
